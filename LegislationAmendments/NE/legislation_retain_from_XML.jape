@@ -1,0 +1,251 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_retain_from_XML.jape
+* Author:	Paul Appleby
+* Description:	Annotations for amendments. We need to 'know' about certain items of the original XML markup
+		so this is where we transfer them to the annotation set for processing
+* Date created:	15/02/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	RetainFromXML
+Input:  BlockAmendment P Pblock P1group P1 P2 P3 P4 P5 Metadata Pnumber Body Schedule Chapter Part Text PrimaryPrelims SecondaryPrelims SecondaryPreamble RoyalPresence Character td tbody tr Title TitleBlock ExplanatoryNotes Number
+Options: control = all
+
+/*
+For certain elements that can be referenced as long-distance structures we also need
+to preserve the id of the element
+*/
+
+Rule: Metadata
+(
+	{Metadata}
+):metadata
+-->
+	:metadata.LegMetadata = {}
+
+Rule: Body
+(
+	{Body}
+):body
+-->
+	:body.LegBodyBlock = {}
+
+Rule: Part
+(
+	{Part}
+):part
+-->
+	:part.SourceRef = {uri = :part.Part.IdURI},
+	:part.LegPartBlock = {}
+
+Rule: Chapter
+(
+	{Chapter}
+):chapter
+-->
+	:chapter.SourceRef = {uri = :chapter.Chapter.IdURI},
+	:chapter.LegChapterBlock = {}
+
+Rule: Pblock
+(
+	{Pblock}
+):pblock
+-->
+	:pblock.LegPblock = {}
+
+Rule: Schedule
+(
+	{Schedule}
+):schedule
+-->
+	:schedule.SourceRef = {uri = :schedule.Schedule.IdURI},
+	:schedule.LegScheduleBlock = {originalID = :schedule.Schedule.id}
+
+Rule: PNumber
+(
+	{Pnumber}
+):source
+-->
+	:source.LegPnumber = {}
+
+Rule: BlockAmendment
+(
+	{BlockAmendment}
+):amendment
+-->
+:amendment.LegAmendment = {
+	Context= :amendment.BlockAmendment.Context,
+	TargetClass= :amendment.BlockAmendment.TargetClass
+}
+
+Rule: Text
+(
+	{Text}
+):source
+-->
+	:source.LegText = {}
+
+Rule: TableCell
+(
+	{td}
+):source
+-->
+	:source.LegTableCell = {}
+
+Rule: TableRow
+(
+	{tr}
+):source
+-->
+	:source.LegTableRow = {}
+
+Rule: TableBody
+(
+	{tbody}
+):amendment
+-->
+	:amendment.LegTableBody = {}
+
+Rule: URIpassP1group
+(
+	{P1group}
+):source
+-->
+	:source.SourceRef = {uri = :source.P1group.IdURI},
+	:source.LegP1group = {}
+
+Rule: URIpassP1
+(
+	{P1}
+):source
+-->
+	:source.SourceRef = {uri = :source.P1.IdURI},
+	:source.LegP1 = {}
+
+Rule: URIpassP
+(
+	{P}
+):source
+-->
+	:source.SourceRef = {uri = :source.P.IdURI},
+	:source.LegP = {}
+
+Rule: URIpassP2
+(
+	{P2}
+):source
+-->
+	:source.SourceRef = {uri = :source.P2.IdURI},
+	:source.LegP2 = {}
+
+Rule: URIpassP3
+(
+	{P3}
+):source
+-->
+	:source.SourceRef = {uri = :source.P3.IdURI},	
+	:source.LegP3 = {}	
+	
+Rule: URIpassP4
+(
+	{P4}
+):source
+-->
+	:source.SourceRef = {uri = :source.P4.IdURI},	
+	:source.LegP4 = {}
+	
+Rule: URIpassP5
+(
+	{P5}
+):source
+-->
+	:source.SourceRef = {uri = :source.P5.IdURI}
+
+Rule: URIpassTitle
+(
+	{Title}
+):source
+-->
+	:source.LegTitle = {}
+
+Rule: URIpassTitleBlock
+(
+	{TitleBlock}
+):source
+-->
+	:source.LegTitleBlock = {}
+
+Rule: Prelims
+(
+	{SecondaryPrelims} |
+	{PrimaryPrelims}
+):annotation
+-->
+{
+	// Because we're using a version of GATE that is not namespace aware use Prelime to annotatin metadata section.
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	FeatureMap featuresMetadata = Factory.newFeatureMap();
+	FeatureMap featuresPrelims = Factory.newFeatureMap();
+	try {
+		outputAS.add(new Long(1), annotationSet.firstNode().getOffset(), "LegMetadata", featuresMetadata);				
+		outputAS.add(annotationSet.firstNode(), annotationSet.lastNode(), "LegPrelims", featuresPrelims);				
+	}
+	catch (Exception e) {
+		System.err.println("Prelims error: " + e.getMessage());
+	}
+
+}
+
+Rule: EnactingText
+(
+	{SecondaryPreamble}
+):annotation
+-->
+	:annotation.LegEnactingText = {}
+
+Rule: RoyalPresence
+(
+	{RoyalPresence}
+):annotation
+-->
+	:annotation.LegRoyalPresence = {}
+
+/*Rule: Character
+(
+	{Character}
+):annotation
+-->
+{
+	:annotation.LegCharacter = {type = :annotation.Character.Name}
+}*/
+
+Rule: ExplanatoryNotes
+(
+   {ExplanatoryNotes}
+):annotation
+-->
+   :annotation.ExplanatoryNotes = {}
+
+Rule: Number
+(
+   {Number}
+):annotation
+-->
+   :annotation.LegNumber = {}

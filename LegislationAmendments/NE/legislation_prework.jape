@@ -1,0 +1,61 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_prework.jape
+* Author:		Paul Appleby
+* Description:	Special bits of code to handle oddities
+* Date created:	02/03/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	Prework
+Input:  Token LegPnumber
+Options: control = appelt
+
+Rule: AvoidPotentialLegisStart
+(
+	{LegPnumber}
+	({Token.root != "the"})+
+	(
+		{Token.string == "the"}
+	)
+	(
+		{Token.string == "Schedule"}
+	)
+)
+-->{}
+
+/* Due to the problem of 'the' at the start of legislation try to work our if this instance of 'the' is a valid start to a legislation title */
+Rule: PotentialLegisStart
+(
+	{LegPnumber}
+	({Token.root != "the"})+
+	(
+		{Token.string == "the"}
+	):start
+)
+-->
+	:start.LegisStart = {}
+
+
+Rule: PotentialInterpretationLegisStart
+(
+	{Token.string == "means"}
+	({Token.string == "the"}):start
+)
+-->
+	:start.LegisStart = {}

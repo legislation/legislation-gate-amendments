@@ -1,0 +1,78 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_stanford_results_transfer.jape
+* Author:	Paul Appleby
+* Description:	Find content that we want the Stanford parser to process
+* Date created:	22/06/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	StanfordResultsTransfer
+Input:  SyntaxTreeNode NonTextualPhrase NonTextualStructure EnablingPowerStructure CommencementStructure
+Options: control = all
+
+Rule: NonTextualStructure
+(
+	{NonTextualStructure}
+):annotation
+-->	
+	:annotation.NonTextualStructure = {}
+
+Rule: NonTextualPhrase
+(
+	{NonTextualPhrase}
+):annotation
+-->	
+	:annotation.NonTextualPhrase = {}
+
+Rule: EnablingPowerStructure
+(
+	{EnablingPowerStructure}
+):annotation
+-->	
+	:annotation.EnablingPowerStructure = {}
+
+
+Rule: CommencementStructure
+(
+	{CommencementStructure}
+):annotation
+-->	
+	:annotation.CommencementStructure = {}
+
+
+Rule: NP
+(
+	{SyntaxTreeNode.cat == "NP"}
+):annotation
+-->	
+	:annotation.NounPhrase = {}
+	
+Rule: VP
+(
+	{SyntaxTreeNode.cat == "VP"}
+):annotation
+-->	
+	:annotation.VerbPhrase = {}
+	
+Rule: PP
+(
+	{SyntaxTreeNode.cat == "PP"}
+):annotation
+-->	
+	:annotation.PrepositionalPhrase = {}

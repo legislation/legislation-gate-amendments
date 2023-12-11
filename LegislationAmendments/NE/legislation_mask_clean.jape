@@ -1,0 +1,72 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_mask_clean.jape
+* Author:	Paul Appleby
+* Description:	Clean up annotations in Mask annotations
+* Date created:	15/02/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Clean
+Input:  Legislation Quote Location Relation Mask LegAmendment Action OtherRef Anaphor LegRoyalPresence
+Options: control = appelt
+
+
+// Remove all annotations inside a mask
+// We need to do this now because later mask test depend on the absence of certain annotations
+// So if we have masked e.g. action annotations we need to get rid of them
+Rule: RemoveInMask
+(
+	{Mask}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("LegRef");
+	coveringList.add("LegBodyBlock");
+	coveringList.add("LegScheduleBlock");
+	coveringList.add("OtherRef");
+	coveringList.add("LegPnumber");
+	coveringList.add("LegConjunction");
+	coveringList.add("StopConjunction");
+	coveringList.add("Legislation");
+	coveringList.add("Interpretation");
+	coveringList.add("Action");
+	coveringList.add("Anaphor");
+	coveringList.add("Location");
+	coveringList.add("Quote");
+	coveringList.add("Relation");
+	coveringList.add("LegAmendment");
+	coveringList.add("Provisions");
+	coveringList.add("ExtendTo");
+	coveringList.add("ExtentCountries");
+	coveringList.add("SubLocation");
+	coveringList.add("SubLocationGroup");
+	coveringList.add("SubLocationRange");
+	coveringList.add("Date");
+	coveringList.add("CrossRef");
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation maskAnn = annotationSet.iterator().next();
+	Long maskStart = maskAnn.getStartNode().getOffset();
+	Long maskEnd = maskAnn.getEndNode().getOffset();
+	
+	AnnotationSet inputSet = inputAS.getContained(maskStart, maskEnd);
+	AnnotationSet removeSet = inputSet.get(coveringList);
+	
+ 	outputAS.removeAll(removeSet);
+}
+

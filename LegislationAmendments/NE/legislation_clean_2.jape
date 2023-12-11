@@ -1,0 +1,44 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_clean_2.jape
+* Author:	Paul Appleby
+* Description:	Clean up more annotations. We use a second pass to avoid conflict in some situations
+* Date created:	15/02/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Clean2
+Input:  LegEnactingText 
+Options: control = appelt
+
+
+Rule: RemoveInEnactingText
+(
+	{LegEnactingText}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("LegPnumber");
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = inputAS.getContained(legStart, legEnd);
+	AnnotationSet removeSet = nestedSet.get(coveringList);
+ 	outputAS.removeAll(removeSet);
+}

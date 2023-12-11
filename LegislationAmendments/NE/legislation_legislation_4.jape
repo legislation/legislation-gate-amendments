@@ -1,0 +1,43 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase:	Legislation4
+Input:  Legislation FootnoteRef Token
+Options: control = all // because FootnoteRef claims 1 char that it doesn't really own
+
+/* Where we get legislation with no context (URI), 
+   followed by a footnote reference,
+   attempt to retrieve URI by looking up footnote
+   in the footnote map attached to the doc features.
+   The map has been created upstream from footnotes
+   which contain citation details.
+*/
+
+Rule: FootnoteContext
+(
+  ({Legislation.rule=="NoContext"}):leg
+  ({FootnoteRef}):foot
+)
+-->
+{
+  Annotation legAnn= bindings.get("leg").iterator().next();
+  Annotation footAnn= bindings.get("foot").iterator().next();
+  String id= (String)footAnn.getFeatures().get("Ref");
+  if(id!=null) {
+    Map<String,String> footnoteMap= (Map<String,String>)doc.getFeatures().get("footnotes");
+	if(footnoteMap!=null) {
+	  String uri= footnoteMap.get(id);
+	  if(uri!=null) {
+        FeatureMap legFM= legAnn.getFeatures();
+		legFM.put("context",uri);
+		legFM.put("rule","FootnoteContext");
+	  }
+	}
+  }
+}

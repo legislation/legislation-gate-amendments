@@ -1,0 +1,765 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_mask_items_2.jape
+* Author:	Paul Appleby
+* Description:	Annotations for markup from the legislation we want to ignore
+* Date created:	03/03/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	Mask2
+Input:  Quote Legislation Token LegAmendment Action LegRef LegText LegPnumber Mask Location RepealsRevocations Anaphor
+Options: control = appelt
+
+
+Rule: AvoidXXX
+(
+	{Quote} |
+	{Mask} |
+	{LegAmendment}
+)
+-->{}
+
+/* Remask RR tables */
+Rule: RepealsRevocations
+(
+	{RepealsRevocations}
+):annotation
+-->
+	:annotation.Mask = {type = "Tabular"}
+
+/* Get rid of paragraphs that contain no usable information */
+Rule: NoAdditionaInfo
+(
+	{Token.string == "to"}
+	{Token.string == "be"}
+	{Token.string == "added"}
+):annotation
+-->
+	:annotation.Mask = {type = "NoInfo"}
+
+
+Rule: HasConsented
+(
+	{Token.string == "consents"}
+	{Token.string == "to"}
+	{Token.string == "the"}
+	{Token.string == "making"}
+	{Token.string == "of"}
+):annotation
+-->
+	:annotation.Mask = {type = "HasConsented"}
+
+Rule: MentionedIn
+(
+	{Token.string == "for"}
+	{Token.string == "a"}
+	{Token.string == "purpose"}
+	{Token.string == "mentioned"}
+	{Token.string == "in"}
+):annotation
+-->
+	:annotation.Mask = {type = "HasConsented"}
+
+Rule: AtCourt
+(
+	{Token.root == "at"}
+	{Token.string == "the"}
+	{Token.root == "court"}
+	{Token.string == "at"}
+):annotation
+-->
+	:annotation.Mask = {type = "AtCourt"}
+
+/* Where text refers to something being done under a provision then that is indirect reference and we ignore */
+Rule: Under
+(
+	{Token.root == "under"}
+	{LegRef}
+):annotation
+-->
+	:annotation.Mask = {type = "Under"}
+
+
+/* Where text refers to something being done under a provision then that is indirect reference and we ignore */
+Rule: ByVirtue
+(
+	{Token.string == "by"}
+	{Token.string == "virtue"}
+	{Token.string == "of"}
+):annotation
+-->
+	:annotation.Mask = {type = "Under"}
+
+Rule: Parentheses
+(
+	(
+		{Legislation} |
+		(
+			{Quote}
+			{Token.string == "and"}
+		)
+	)
+	(
+		{Token.string == "("}
+		{Token.string != "and"}
+		(
+			{Token.string != ")", Token.string != "("} |
+			(
+				{Token.string == "("}
+				({Token.string != ")"})+
+				{Token.string == ")"}
+			)
+		)+
+		{Token.string == ")"}
+	)+:annotation
+)
+-->
+	:annotation.Mask = {type = "Parentheses"}
+
+Rule: References
+(
+	(
+		{Token.string == "any"}
+		{Token.root == "reference"}
+		{Token.string == "below"}
+	) |
+	(
+		{Token.root == "reference"}
+		{Token.string == "to"}
+	) |
+	(
+		{Token.string == "referred"}
+		{Token.string == "to"}
+		{Token.string == "in"}
+		{LegRef}
+	)	
+):annotation
+-->
+	:annotation.Mask = {type = "ReferencesTo"}
+
+Rule: Assent
+(
+	{Token.string == "passing"}
+	{Token.string == "of"}
+	{Anaphor}
+):annotation
+-->
+	:annotation.Mask = {type = "Assent"}
+
+
+Rule: Exceptions
+(
+	{Token.root == "nothing"}
+	{Token.string == "in"}
+	{LegRef}
+):annotation
+-->
+	:annotation.Mask = {type = "Exception"}
+
+Rule: NotRequires
+(
+	{LegRef}
+	{Token.root == "do"}
+	{Token.string == "not"}
+	{Token.string == "require"}
+):annotation
+-->
+	:annotation.Mask = {type = "Exception"}
+
+
+Rule: NotPrevent
+(
+	{Token.string == "does"}
+	{Token.string == "not"}
+	{Token.string == "prevent"}
+):annotation
+-->
+	:annotation.Mask = {type = "Exception"}
+
+Rule: NotExercised
+(
+	{Token.string == "may"}
+	{Token.string == "not"}
+	{Token.string == "be"}
+	{Token.string == "exercised"}
+):annotation
+-->
+	:annotation.Mask = {type = "Exception"}
+
+
+Rule: May
+(
+	{Token.string == "may"}
+	{Token.string == "by"}
+	{Token.string == "order"}
+):annotation
+-->
+	:annotation.Mask = {type = "May"}
+
+Rule: UnderLegislation
+(
+	(
+		{Token.root == "an"} |
+		{Token.root == "any"}
+	)
+	{Token.root == "order"}
+	{Token.string == "under"}
+):annotation
+-->
+	:annotation.Mask = {type = "UnderLegislation"}
+
+Rule: ConsequenceOf
+(
+	{Token.root == "in"}
+	{Token.string == "consequence"}
+	{Token.string == "of"}
+):annotation
+-->
+	:annotation.Mask = {type = "Consequential"}
+
+Rule: Consequential
+(
+	{Token.string == "by"}
+	{Token.string == "the"}
+	{Token.string == "omission"}
+	{Token.string == "of"}
+	{LegRef}
+):annotation
+-->
+	:annotation.Mask = {type = "Consequential"}
+
+
+Rule: CertifiedCopy
+(
+	{Token.root == "a"}
+	{Token.string == "certified"}
+	{Token.string == "copy"}
+):annotation
+-->
+	:annotation.Mask = {type = "CertifiedCopy"}
+
+Rule: Interpretation
+(
+	(
+		{Token.string == "In"}
+		(
+			(
+				{Token.string == "this"}
+				{Token.string == "Scheme"}
+			) |
+			(
+				{Token.string == "this"}
+				{Token.string == "Act"}
+			) |
+			(
+				{Token.string == "these"}
+				{Token.string == "Regulations"}
+			)
+		)
+	):annotation
+)
+-->
+	:annotation.Mask = {type = "Interpretation"}
+
+
+Rule: HasTheMeaning
+(
+	(
+		{Token.root == "have"}
+		{Token.string == "the"}
+		({Token.string == "same"})?
+		{Token.string == "meaning"}
+	) |
+	(
+		{Token.string == "within"}
+		{Token.string == "the"}
+		{Token.string == "meaning"}
+	) |
+	(
+		{Quote}
+		{Token.string == "means"}
+	) |
+	(
+		{Quote}
+		{Token.string == "also"}
+		{Token.string == "includes"}
+	)
+):annotation
+-->
+	:annotation.Mask = {type = "Interpretation"}
+
+Rule: ForThePurpose
+(
+	{Token.root == "for"}
+	(
+		{Token.string == "the"} |
+		{Token.string == "those"}
+	)
+	{Token.root == "purpose"}
+):annotation
+-->
+	:annotation.Mask = {type = "Interpretation"}
+
+Rule: HaveEffect
+(
+	(
+		{Token.string == "are"}
+		{Token.string == "to"}
+		{Token.string == "be"}		
+		{Token.string == "applied"}
+	) |
+	(
+		{Token.string == "as"}
+		{Token.string == "applied"}
+		{Token.string == "to"}
+	) |
+	(
+		{Token.string == "as"}
+		{Token.string == "applied"}
+		{Token.string == "by"}
+	) |
+	(
+		{Token.string == "shall"}
+		{Token.string == "apply"}
+	) |
+	(
+		{Token.string == "in"}
+		{Token.string == "the"}
+		{Token.string == "substituted"}
+	) |
+	(
+		{Token.string == "treated"}
+		{Token.string == "as"}
+		{Token.string == "substituted"}
+	) |
+	(
+		{Token.string == "there"}
+		{Token.string == "were"}
+		{Token.string == "substituted"}
+	) |
+	(
+		{Token.string == "as"}
+		{Token.string == "it"}
+		{Token.string == "has"}
+		{Token.string == "effect"}
+	) |
+	(
+		{Token.string == ","}
+		{Token.string == "has"}
+		{Token.string == "effect"}
+		{Token.string == "."}
+	) |
+	(
+		{Token.string == "are"}
+		{Token.string == "effective"}
+	) |
+	(
+		{Token.string == "with"}
+		{Token.string == "effect"}
+		{Token.string == "for"}
+	) |
+	(
+		{Token.string == "having"}
+		{Token.string == "effect"}
+	) |
+	(
+		{Token.string == "with"}
+		{Token.string == "effect"}
+		{Token.string == "from"}
+	) |
+	(
+		{Token.string == "have"}
+		{Token.string == "effect"}
+	) |
+	(
+		{Token.string == "has"}
+		{Token.string == "effect"}
+		(
+			{Token.string == "from"} |
+			{Token.string == "instead"}
+		)
+	) |
+	(
+		{Token.string == "has"}
+		{Token.string == "effect"}
+		({Token.string == ","})?
+		{Token.string == "in"}
+		{Token.string == "relation"}
+		{Token.string == "to"}		
+	) |
+	(
+		{Token.string == "apply"}
+		{Token.string == "in"}
+		{Token.string == "relation"}
+		{Token.string == "to"}		
+	) |
+	(
+		{Token.string == "effected"}
+		{Token.string == "under"}
+	) |
+	(
+		{Token.string == "never"}
+		{Token.string == "to"}
+		{Token.string == "have"}
+		{Token.string == "had"}
+		{Token.string == "effect"}
+	) |
+	(
+		{Token.root == "for"}
+		{Token.string == "the"}
+		{Token.string == "effect"}
+		{Token.string == "of"}
+	) |
+	(
+		{Token.string == "applies"}
+		{Token.string == "if"}
+	)
+):annotation
+-->
+	:annotation.Mask = {type = "EffectText"}
+
+Rule: EffectsListed
+(
+	(
+		{Token.root == "the"}
+		{Token.string == "enactments"}
+		{Token.string == "listed"}
+	)
+):annotation
+-->
+	:annotation.Mask = {type = "EffectsListed"}
+
+
+Rule: Action
+(
+	(
+		(
+			{Token.string == "must"}
+			{Token.string == "be"}
+		) |
+		(
+			{Token.string == "must"}
+			{Token.string == "not"}
+		)			
+	)
+	{Action}
+):annotation
+-->
+	:annotation.Mask = {type = "Action"}
+
+
+Rule: ComingIntoForce
+(
+	(	
+		(
+			(
+				(
+					{Token.string == "at"}
+					{Token.string == "the"}
+					{Token.string == "time"}	
+				) |
+				{Token.string == "before"}	
+			)
+			(
+				{Token.string == "this"} |
+				{Token.string == "these"}
+			)
+			(
+				{Token.root == "order"} |
+				{Token.root == "scheme"} |
+				{Token.root == "rules"} |
+				{Token.root == "regulations"}
+			)
+		) |
+		(
+			{Token.string == "on"}
+			{Token.string == "which"}
+			{Token.string == "they"}	
+		) |
+		(
+			{Token.string == "after"}
+			{Token.string == "the"}	
+		) |
+		(
+			{Token.string == "after"}
+			{Token.string == "they"}	
+		) |
+		(
+			{Token.string == "before"}
+			{Token.string == "the"}
+			(
+				{Token.string == "date"}
+				{Token.string == "of"}
+			)?
+		) |
+		(
+			{Token.string == "prior"}
+			{Token.string == "to"}
+			{Token.string == "the"}
+		) |
+		(
+			{Token.string == "before"}
+			{Token.string == "the"}
+			{Token.string == "day"}
+			{Token.string == "on"}
+			{Token.string == "which"}
+			{Token.string == "this"}
+			{Token}
+		) |
+		(
+			{Token.string == "is"}
+			{Token.string == "not"}
+			{Token.string == "to"}
+		)
+	)
+	(
+		{Action.type == "ComingIntoForce"} |
+		(
+			{Token.string == "commencement"}
+			{Token.string == "date"}
+		)
+	)
+):annotation
+-->
+	:annotation.Mask = {type = "ComingIntoForce"}
+
+Rule: ComingIntoForce2
+(
+	{Token.root == "from"}
+	{Token.string == "the"}
+	{Action.type == "ComingIntoForce"}
+):annotation
+-->
+	:annotation.Mask = {type = "ComingIntoForce"}
+
+Rule: Contains
+(
+	(
+		{LegRef}
+		{Token.string == "contains"}
+	) |
+	(
+		{Token.string == "contains"}
+		{Token.string == "other"}
+		{Token.string == "amendments"}
+	)
+):annotation
+-->
+	:annotation.Mask = {type = "Contains"}
+
+Rule: Commencement
+(
+	{Token.string == "commencement"}
+	{Token.string == "of"}
+	{Token.string == "that"}
+):annotation
+-->
+	:annotation.Mask = {type = "Commencement"}
+
+/* These structures will be masked out down to P2 */
+Rule: UnhandledStructure
+(
+	(
+		{Token.root == "in"} |
+		{Token.root == "for"}
+	)	
+	(
+		{Token.string == "Form"} |
+		{Token.string == "Ground"} |
+		{Token.string == "matter"} |
+		{Token.string == "Note"} |
+		{Token.string == "column"} |
+		(
+			{Token.string == "the"}
+			{Token.string == "sidenote"}
+		) |
+		(
+			{Token.string == "the"}
+			{Token.string == "description"}
+			{Token.string == "of"}
+		)
+	) |
+	(
+		{Token.string == "relating"}
+		{Token.string == "to"}
+		(
+			{Token.string == "\u2013"} |
+			{Token.string == "\u2014"} |
+			{Token.string == "-"}
+		)
+	) |
+	(
+
+		{Token.string == "does"}
+		{Token.string == "not"}
+		{Token.string == "make"}
+		{Token.string == "provision"}
+	) |
+	(
+
+		{Token.string == "the"}
+		{Token.string == "provisions"}
+		{Token.string == "substituted"}
+	) |
+	(
+		{Token.string == "in"}
+		{Token.string == "the"}
+		{Token.string == "provision"}
+		{Token.string == "to"}
+		{Token.string == "be"}
+	) |
+	(
+		{Token.string == "the"}
+		{Token.string == "amount"}
+		{Token.string == "specified"}
+		{Token.string == "in"}
+	) |
+	(
+		{Token.string == "and"}
+		{Token.string == "specified"}
+		{Token.string == "in"}
+		{Token.string == "the"}
+	) |
+	(
+		{Token.string == "that"}
+		{Token.string == "would"}
+		{Token.string == ","}
+		{Token.string == "in"}
+		{Token.string == "accordance"}
+		{Token.string == "with"}
+	)	
+):annotation
+-->
+	:annotation.Mask = {type = "Unhandled"}
+
+/* These structures will be masked out down to P3 */
+Rule: UnhandledSubStructure
+(
+	(
+		{Token.string == "shall"}
+		{Token.string == "be"}
+		{Token.string == "so"}
+		{Token.string == "modified"}
+	) |
+	(
+
+		{Token.string == "in"}
+		{Token.string == "the"}
+		{Token.string == "modified"}
+	) |
+	(
+
+		{Token.string == "for"}
+		{Token.string == "the"}
+		{Token.string == "modification"}
+		{Token.string == "to"}
+	)
+):annotation
+-->
+	:annotation.Mask = {type = "UnhandledSub"}
+
+Rule: ProvisionsOf
+(
+	{Token.root == "in"}
+	{Token.string == "the"}
+	{Token.string == "provisions"}
+	{Token.string == "of"}
+	{LegRef}
+):annotation
+-->
+	:annotation.Mask = {type = "ProvisionsOf"}
+
+
+Rule: GeneralMask
+(
+	{Token.root == "as"}
+	{Token.string == "regards"}
+	{LegRef}
+):annotation
+-->
+	:annotation.Mask = {type = "GeneralMask"}
+
+
+Rule: GeneralMask2
+(
+	{LegRef}
+	{Token.string == "so"}
+	{Token.string == "far"}
+	{Token.string == "as"}
+):annotation
+-->
+	:annotation.Mask = {type = "GeneralMask"}
+
+Rule: SubjectTo
+(
+	{Token.string == "are"}
+	{Token.string == "subject"}
+	{Token.string == "to"}
+):annotation
+-->
+	:annotation.Mask = {type = "GeneralMask"}
+
+
+Rule: Published
+(
+	{Token.string == "was"}
+	{Token.string == "published"}
+	{Token.string == "in"}
+):annotation
+-->
+	:annotation.Mask = {type = "Published"}
+
+Rule: AppointedDay
+(
+	(
+		(
+			{Token.string == "cease"}
+			{Token.string == "to"}
+			{Token.string == "have"}
+			{Token.string == "effect"}
+		)
+		{Token.string == "on"}
+		{Token.string == "the"}
+		{Token.string == "date"}
+		{Token.string == "appointed"}
+	) |
+	(
+		{Token.string == "be"}
+		{Token.string == "appointed"}
+		{Token.string == "by"}
+	)
+):annotation
+-->
+	:annotation.Mask = {type = "AppointedDay"}
+
+Rule: PnumberBrackets
+(
+	{LegPnumber}
+	{LegText, Token.string == "["}
+):annotation
+-->
+	:annotation.Mask = {type = "PnumberBrackets"}
+
+
+Rule: Brackets
+(
+	{LegText, Token.string == "["}
+):annotation
+-->
+	:annotation.Mask = {type = "Brackets"}

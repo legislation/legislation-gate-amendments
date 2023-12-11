@@ -1,0 +1,57 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_prework_2.jape
+* Author:	Paul Appleby
+* Description:	Special bits of code to handle oddities
+* Date created:	02/03/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	Prework2
+Input:  Token Mask
+Options: control = appelt
+
+
+/* Em dashes at the end of words causes problems with being in a single token ... so remove */
+Rule: DashRemoval
+(
+	{Token.string ==~ "[A-Za-z-]+\u2013"} |
+	{Token.string ==~ "[A-Za-z-]+\u2014"} |
+	{Token.string ==~ "[A-Za-z-]+\u2015"} |
+	{Token.string ==~ "[A-Za-z-]+--"} |
+	{Token.string ==~ "[A-Za-z-]+-"}
+):item
+-->
+{
+	try {
+		AnnotationSet itemSet = bindings.get("item");
+		String token = gate.Utils.stringFor(doc, itemSet);
+		Annotation itemAnn = itemSet.iterator().next();
+		itemAnn.getFeatures().put("root", token.substring(0, token.length() - 1));
+		itemAnn.getFeatures().put("string", token.substring(0, token.length() - 1));
+		FeatureMap features = Factory.newFeatureMap();
+		features.put("root", token.substring(token.length() - 1));				
+		features.put("string", token.substring(token.length() - 1));				
+		outputAS.add(itemSet.firstNode().getOffset(), itemSet.lastNode().getOffset() -1, "Token", itemAnn.getFeatures());		
+		outputAS.add(itemSet.lastNode().getOffset() - 1, itemSet.lastNode().getOffset(), "Token", features);		
+		// Now remove existing token
+		outputAS.removeAll(itemSet);
+	}
+	catch (Exception e) {
+	}
+}

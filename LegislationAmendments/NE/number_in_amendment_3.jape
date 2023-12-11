@@ -1,0 +1,34 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: number_in_amendment_3
+Input: LegAmendment
+Options: control = appelt
+
+/*  Copy feature from LegAmendmentModified to the LegAmendment containing it
+*/
+
+Rule: amendment_contains_extra_info
+(
+	{LegAmendment}
+):match 
+-->
+{
+	AnnotationSet blockAS= (AnnotationSet)bindings.get("match");
+	for( Annotation blockAnn : blockAS) {
+		AnnotationSet containedAS= gate.Utils.getContainedAnnotations(inputAS,blockAnn).get("LegAmendmentModified");
+		for(Annotation containedAnn : containedAS) {
+			String extra= (String)containedAnn.getFeatures().get("affectedExtra");
+			if(extra!=null) {
+				FeatureMap fm=blockAnn.getFeatures();
+				fm.put("affectedExtra",extra);
+			}
+		}
+	}
+}

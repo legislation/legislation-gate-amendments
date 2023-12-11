@@ -1,0 +1,72 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_find_structure_phrases.jape
+* Author:	Paul Appleby
+* Description:	Find content that we want the parser to process for enabling power items. This is basically looking for key phrases to select possible EP candidates that are then parsed by a later stage to check if they are vaild enabling items
+* Date created:	22/06/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	FindEnablingPowers
+Input:  Location Make Quote LegAmendment Mask LegBodyBlock LegScheduleBlock
+Options: control = appelt
+
+
+Rule: AvoidTransfer
+(
+	{LegAmendment} |
+	{LegBodyBlock} |
+	{LegScheduleBlock} |
+	{Quote} |
+	{Mask.type == "Notes"} |
+	{Mask.type == "EarlierOrders"} |
+	{Mask.type == "Footnotes"} |
+	{Mask.type == "Text"} |
+	{Mask.type == "Signature"}
+)
+-->{}
+
+
+
+Rule: EnablingPower
+(
+	{Location.context == "EnablingPower"} |
+	{Make}
+):annotation
+-->	
+{
+
+	HashSet<String> coveringList = new HashSet<String>();
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet coveringSet = inputAS.getCovering("Sentence", legStart, legEnd);
+	Annotation coveringAnn = coveringSet.iterator().next();
+	FeatureMap features = Factory.newFeatureMap();
+	try {
+		outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "EnablingPowerStructure", features);				
+	}
+	catch (Exception e) {
+		System.err.println("Enabling power error: " + e.getMessage());
+	}
+}
+
+
+

@@ -1,0 +1,28 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: Pnumber_prepare_0
+Input: LegAmendment
+Options: control = appelt
+
+Rule: Level4
+(
+   {LegAmendment}
+):match
+-->
+{
+	AnnotationSet blockAS= (AnnotationSet)bindings.get("match");
+	for( Annotation blockAnn : blockAS) {
+		AnnotationSet containedAS= gate.Utils.getContainedAnnotations(inputAS,blockAnn);
+		for(Annotation containedAnn : containedAS) {
+			FeatureMap fm= containedAnn.getFeatures();
+			fm.put("inBlockAmendment","true");
+		}
+	}
+}

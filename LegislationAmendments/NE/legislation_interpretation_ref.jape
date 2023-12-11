@@ -1,0 +1,112 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_interpretation_ref.jape
+* Author:	Paul Appleby
+* Description:	Co-ref interpretation information
+* Date created:	15/02/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	Interpretation
+Input:  Interpretation Token SpaceToken
+Options: control = appelt
+
+Rule: CoRef
+(
+	{Interpretation.format == "Legislation", !Interpretation within Mask}
+):interpretation
+-->
+{
+	AnnotationSet annotationSet = bindings.get("interpretation");
+	AnnotationSet quoteSet = inputAS.get("Quote", annotationSet.firstNode().getOffset(),
+		annotationSet.lastNode().getOffset());
+	List<Annotation> orderedQuotes = gate.Utils.inDocumentOrder(quoteSet);
+	AnnotationSet legisSet = inputAS.get("Legislation", annotationSet.firstNode().getOffset(),
+		annotationSet.lastNode().getOffset());
+
+	// Get the tokens in the quote
+	//System.out.println("Quote: " + gate.Utils.stringFor(doc, orderedQuotes.get(0)));
+	AnnotationSet tokenSet = inputAS.get("Token", orderedQuotes.get(0).getStartNode().getOffset(),
+		orderedQuotes.get(0).getEndNode().getOffset());	
+	List<Annotation> orderedTokens = gate.Utils.inDocumentOrder(tokenSet);
+
+	AnnotationSet docTokenSet = inputAS.get("Token");	
+	List<Annotation> orderedDocTokens = gate.Utils.inDocumentOrder(docTokenSet);
+	
+	// Now find all references
+	int count = 1;
+	long storeFirstPosition = 0;
+	Annotation firstTokenAnn = orderedTokens.get(count);
+	String firstText = gate.Utils.stringFor(doc, firstTokenAnn);
+	String nextText = "";
+	Annotation legisAnn = legisSet.iterator().next();
+	String legis = "";
+	if (legisAnn.getFeatures().get("context") != null) legis = legisAnn.getFeatures().get("context").toString();
+	String type = "";
+	if (legisAnn.getFeatures().get("type") != null) type = legisAnn.getFeatures().get("type").toString();
+	
+	//System.out.println("Resolving references for: " + gate.Utils.stringFor(doc, quoteSet));
+	try {
+		for (Annotation tokenAnn: orderedDocTokens) {
+			String tokenText = gate.Utils.stringFor(doc, tokenAnn);
+			if (storeFirstPosition == 0 && tokenText.equals("The")) tokenText = "the";
+			if (storeFirstPosition > 0) {
+				nextText = gate.Utils.stringFor(doc, orderedTokens.get(count));
+				//System.out.println("Next token to match is: " + nextText);
+			}
+			// Do we have a match on first token?
+			if (storeFirstPosition == 0 && tokenText.equals(firstText)) {
+				//System.out.println("Match first token: " + firstText);
+				storeFirstPosition = tokenAnn.getStartNode().getOffset();		
+				count++;
+			}
+			else if (storeFirstPosition > 0 && tokenText.equals(nextText)) {
+				//System.out.println("Match token: " + nextText);
+				count++;
+				// Do we have a match?
+				// -1 to allow for quote token
+				if (count == orderedTokens.size() - 1) {
+					FeatureMap features = Factory.newFeatureMap();
+					features.put("type", type);
+					features.put("context", legis);
+					//features.put("interpretation", "true");
+					try {
+						AnnotationSet interpretationSet = outputAS.get("Legislation", storeFirstPosition,
+							tokenAnn.getEndNode().getOffset());
+						// We don't want to do twice in case defined twice
+						if (interpretationSet.size() == 0) {
+							outputAS.add(storeFirstPosition, tokenAnn.getEndNode().getOffset(), "Legislation", features);				
+						}
+					}
+					catch (Exception e) {
+						System.err.println("Interpretation error: " + e.getMessage());
+					}
+					storeFirstPosition = 0;
+					count = 1;		
+				}
+			}
+			else {
+				storeFirstPosition = 0;
+				count = 1;
+			}
+		}
+	}
+	catch (Exception e) {
+		System.err.println("Interpretation reference error: " + e.getMessage());
+	}
+}

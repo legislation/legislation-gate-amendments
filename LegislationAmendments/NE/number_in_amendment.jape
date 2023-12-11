@@ -1,0 +1,54 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: number_in_amendment
+Input: LegAmendment LegNumber LegRef
+Options: control = appelt
+
+/* Deal with situation where a LegAmendment (BlockAmendment in the original XML) begins with something like "CHAPTER 3A", that is tagged 
+   as LegNumber (Number in the original XML).
+   In this case, we will need to extract a reference to it, and if it parses as a reference, it will already have
+   a corresponding LegRef annotation, so we copy "list" feature (which will contain something like ['/chapter/3A']) from that to the LegAmendment annotation.
+*/
+
+
+Rule: number_in_amendment
+(
+	{LegAmendment}
+):match 
+-->
+{
+	AnnotationSet legAmendmentAnns= (AnnotationSet)bindings.get("match");
+	for( Annotation legAmendmentAnn : legAmendmentAnns) {
+		FeatureMap fm= legAmendmentAnn.getFeatures();
+		AnnotationSet legNumberAnns= 
+			outputAS.getContained(
+				legAmendmentAnn.getStartNode().getOffset(),
+				legAmendmentAnn.getEndNode().getOffset())
+			.get("LegNumber");
+		for( Annotation legNumberAnn : gate.Utils.inDocumentOrder(legNumberAnns)) {
+			AnnotationSet legRefAnns= 
+				inputAS.get("LegRef",
+					legNumberAnn.getStartNode().getOffset(),
+					legNumberAnn.getEndNode().getOffset());
+			if(!legRefAnns.isEmpty()) {
+				for( Annotation legRefAnn : legRefAnns ) {
+					List<String> refs= (List<String>) legRefAnn.getFeatures().get("list");
+					String ref= refs.get(0);
+					ArrayList<String> refs1= new ArrayList<String>();
+					refs1.add(ref);
+					fm.put("list",refs1);
+					fm.put("list_includes_label","true");
+				}
+				// We only want the first one really
+				break;
+			}
+		}
+	}
+}

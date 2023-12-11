@@ -1,0 +1,57 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_assign_id.jape
+* Author:	Paul Appleby
+* Description:	Assign ids to every event that makes sense
+* Date created:	09/02/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	AssignIdentifiers
+Input:  Legislation LegRef Action Location LegAmendment Quote
+Options: control = once
+
+
+Rule: AssignID
+(
+	{Legislation} |
+	{LegRef} |
+	{Quote} |
+	{Action} |
+	{LegAmendment} |
+	{Location}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("Legislation");
+	coveringList.add("LegRef");
+	coveringList.add("Action");
+	coveringList.add("Quote");
+	coveringList.add("Location");
+	coveringList.add("LegAmendment");
+
+	AnnotationSet itemSet = inputAS.get(coveringList);
+	List<Annotation> orderedItems = gate.Utils.inDocumentOrder(itemSet);
+	Integer count = 0;
+	for (Annotation item: orderedItems) {
+		item.getFeatures().put("id", "leg-item-" + count);
+		count++;
+	}
+}
+

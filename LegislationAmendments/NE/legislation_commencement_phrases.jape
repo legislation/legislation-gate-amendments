@@ -1,0 +1,35 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_commencement_phrases.jape
+* Author:	Paul Appleby
+* Description:	Identify phrases particular to commencement structures
+* Date created:	27/02/2012
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	CommencementPhrases
+Input:  Token
+Options: control = appelt
+
+Rule: PurposesOf
+(
+	{Token.string == "for"}
+	{Token.string == "the"}
+	{Token.root == "purpose"}
+):purposes
+-->
+	:purposes.For = {}
+

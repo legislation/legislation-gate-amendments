@@ -1,0 +1,1750 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_amendment_location.jape
+* Author:	Paul Appleby
+* Description:	Identify location of amendment on legislation
+* Date created:	15/02/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Location
+Input:  Token LineBreak LegRef Quote Legislation Action LegPnumber Anaphor StopConjunction CrossRef LegTableCell QuotePrewords Relation Location
+Options: control = appelt
+
+Macro: POSITION
+(
+	{Token.string == "first"} |
+	{Token.string == "second"} |
+	{Token.string == "third"} |
+	{Token.string == "fourth"} |
+	{Token.string == "fifth"} |
+	{Token.string == "sixth"} |
+	{Token.string == "seventh"} |
+	{Token.string == "eighth"} |
+	{Token.string == "ninth"} |
+	{Token.string == "tenth"} |
+	{Token.string == "eleventh"} |
+	{Token.string == "twelfth"} |
+	{Token.string == "thirteenth"} |
+	{Token.string == "fourteenth"} |
+	{Token.string == "fifteenth"}
+)
+
+Macro: NTHWORDINSTANCE
+(
+	({Token.string == ","})?
+	{Token.string ==~ "[Ii]n"}
+	{Token.string == "the"}
+	(POSITION):position
+	{Token.string == "place"}
+)
+
+
+// Ignore phrases like that "In that section" - otherwise looks like new context
+// http://www.legislation.gov.uk/id/ukpga/2019/1/section/57/3
+Rule: InThatSection
+(
+	({LegPnumber} | {Token.string==","})
+	({Token.string==~"[Ii]n"})
+	({Token.string=="that"})
+	({Token.string==~"((sub-?)?section)|((sub-?)?paragraph)|(rule)|(regulation)|(point)|(schedule)"})
+):match
+-->
+:match.InThatSection={}
+
+
+Rule: AvoidLocation
+(
+	{Location}
+)
+-->{}
+
+Rule: In
+(
+	(
+		{Token.string == "the"}
+		(
+			{Token.string == "entry"} |
+			{Token.string == "entries"}
+		)
+	)?:entry
+	(
+		{Token.root == "in"} |
+		(
+			{Token.root == "as"}
+			{Token.string == "regards"}
+		)
+	):in
+	(
+		(
+			{Token.string == "every"}
+			{Token.string == "provision"}
+			{Token.string == "of"}
+		) |
+		(
+			{Token.string == "both"}
+		) |
+		(
+			{Token.string == "each"}
+			{Token.string == "of"}
+		) |
+		(
+			{Token.root == "the"}
+			(POSITION):position
+		)
+	)?
+	(
+		(
+			{Token.string == "\u2014"}
+			{LegPnumber}
+			{LegRef}
+		) |
+		{LegRef} |
+		{Anaphor.type == "OtherRef"}
+	)
+)
+-->
+	:entry.Location = {type = "RelatedEntry"},
+	:in.Location = {type = "In", position = :position.Token.string}
+
+/* For references to rules sometimes a bit of context is given e.g. 'In pension rule 4' */
+Rule: InRule
+(
+	({Token.root == "in"}):in
+	{Token}
+	{LegRef, Token.root == "rule"}
+)
+-->
+	:in.Location = {type = "In"}
+//	:in.Location = {type = "In", position = :position.Token.string}
+
+
+Rule: ForRuleRef
+(
+	({Token.root == "for"}):for
+	{Token}
+	{LegRef, Token.root == "rule"}
+)
+-->
+	:for.Location = {type = "ForRef"}
+
+
+Rule: InAmendment
+(
+	({Token.root == "in"}):in
+	{LegRef}
+	{Token.string == "to"}
+	{Token.string == "be"}
+	{Token.string == "inserted"}
+)
+-->
+	:in.Location = {type = "InAmendment"}
+//	:in.Location = {type = "InAmendment", position = :position.Token.string}
+
+Rule: InsertedAmendment
+(
+	(
+		{Token.root == "in"}
+		{Token.string == "the"}
+		{Token.string == "inserted"}
+	):in
+	{LegRef}
+)
+-->
+	:in.Location = {type = "InAmendment"}
+//	:in.Location = {type = "InAmendment", position = :position.Token.string}
+
+
+Rule: Under
+(
+	(
+		{Token.root == "under"} |
+		{Token.root == "within"}
+	):under
+	{LegRef}
+)
+-->
+	:under.Location = {type = "Under"}
+
+
+Rule: SetOutIn
+(
+	(
+		(
+			(
+				{Token.root == "set"}
+				{Token.root == "out"}
+			) |
+			{Token.string == "specified"} |
+			{Token.string == "listed"} |
+			(
+				{Token.root == "the"}
+				{Token.string == "regulations"}
+			)
+		)
+		{Token.root == "in"}
+	):setoutin
+	(
+		(
+			{Token.string == "column"}
+			{Token.category == CD}
+		):structure
+		{Token.string == "of"}
+	)?
+	(
+		{LegRef} |
+		{Anaphor.type == "Ref"} |
+		{CrossRef.type == "Provision"}
+	)
+)
+-->
+	:setoutin.Location = {type = "SetOutIn"},
+	:structure.Structure = {}
+
+Rule: For
+(
+	({Token.root == "for"}):for
+	(
+		{Token.root == "the"}
+		(
+			{Token.root == "word"} |
+			{Token.string == "expression"}
+		)?
+	)?
+	{Quote}
+)
+-->
+	:for.Location = {type = "For", subType="Words"},
+	:for.TempLocation = {type = "For", subType="Words"}
+
+
+Rule: CrossHeading
+(
+	{Token.root == "for"}
+	{Token.string == "the"}
+	{Token.string == "cross"}
+	{Token.string == "heading"}
+):for
+-->
+	:for.Location = {type = "CrossHeading"}
+
+Rule: BeforeHeading
+(
+	(
+		{Token.root == "in"}
+		{Token.string == "the"}
+		({Token.string == "italic"})?
+		(
+			{Token.string == "heading"} |
+			{Token.string == "title"}
+		)
+		{Token.string == "preceding"}
+		{Token.string == "the"}
+		{Token.string == "paragraph"}
+	):for		
+)
+-->
+	:for.Location = {type = "BeforeHeading"}
+
+
+Rule: ToC
+(
+	{Token.root == "in"}
+	{Token.string == "the"}
+	{Token.root == "table"}
+	{Token.string == "of"}
+	{Token.root == "contents"}
+):toc
+-->
+	:toc.Location = {type = "TOC"}
+
+
+Rule: Heading
+(
+	(
+		({Token.root == "in"}):in |
+		({Token.root == "for"}):for
+	)?
+	(
+		{Token.string ==~ "[Tt]he"}
+		(
+			{Token.string == "section"}
+		)?
+		(
+			{Token.string == "heading"} |
+			{Token.string == "title"}
+		)
+	):heading
+)
+-->
+	:in.Location = { type = "In"},
+	:for.Location = { type = "For" },
+	:heading.Location = {type = "Heading"}
+
+
+Rule: CrossHeading
+(
+	(
+		({Token.root == "in"}):in |
+		({Token.root == "for"}):for
+	)?
+	(
+		{Token.string ==~ "[Tt]he"}
+		{Token.string == "italic"}
+		({Token.string ==~ "(cross-)?heading"} |
+		 {Token.string == "title"})
+	):heading
+)
+-->
+	:in.Location = { type = "In"},
+	:for.Location = { type = "For" },
+	:heading.Location = {type = "CrossHeading"}
+
+Rule: Sub-heading
+(
+	(
+		{Token.string ==~ "[Tt]he"}
+		(
+			{Token.string == "italic"} |
+			{Token.string == "section"}
+		)?
+		(
+			{Token.string ==~ "sub-?heading"}
+		)
+	):heading
+)
+-->
+	:heading.Location = {type = "Sub-heading"}
+
+
+/*
+Rule: Heading2
+(
+	{Token.string == "and"}
+	(
+		{Token.string == "the"}
+		(
+			{Token.string == "italic"} |
+			{Token.string == "section"}
+		)?
+		(
+			{Token.string == "heading"} |
+			{Token.string == "title"}
+		)
+		({Token.string == "to"})?
+	):heading
+)
+-->
+	:heading.Location = {type = "Heading"}
+*/
+/*
+Rule: HeadingForRef
+(
+	(
+		{Token.root == "in"}
+		{Token.string == "the"}
+		(
+			{Token.string == "italic"} |
+			{Token.string == "section"}
+		)?
+		(
+			{Token.string == "heading"} |
+			{Token.string == "title"}
+		)
+		{Token.string == "for"}
+	):heading
+	{LegRef}
+)
+-->
+	:heading.Location = {type = "Heading"}
+*/
+
+Rule: AfterHeading
+(
+	(
+		{Token.root == "under"} |
+		{Token.root == "after"}
+	)
+	{Token.string == "the"}
+	(
+		{Token.string == "heading"} |
+		{Token.string == "title"}
+	)
+):after
+-->
+	:after.Location = {type = "AfterHeading"}
+
+
+Rule: HeadingBecomes
+(
+	(
+		{Token.root == "the"}
+		{Token.string == "heading"}
+		{Token.string == "becomes"}
+	):becomes
+	{Quote}
+)
+-->
+	:becomes.Location = {type = "Heading"}
+
+Rule: AtEndOfHeading
+(
+	{Token.root == "at"}
+	{Token.string == "the"}
+	{Token.string == "end"}
+	{Token.string == "of"}
+	{Token.string == "the"}
+	{Token.string == "heading"}
+):endOf
+-->
+	:endOf.Location = {type = "AtEndOfHeading"}
+
+Rule: Sentence
+(
+	({Token.root == "for"})?
+	{Token.root == "the"}
+	((POSITION))?:position
+	{Token.string == "sentence"}
+	(
+		({Token.string == "beginning"})
+	|	({Token.string=="immediately"} {Token.string=="following"}
+			({LegRef}|{Quote}|({Token.string=="the"}{Token.string==~"[Tt]able"})))
+	)?
+):sentence
+-->
+	:sentence.Location = {type = "Sentence", position = :position.Token.string}
+
+Rule: ForWherever
+(
+	({Token.root == "for"}):for
+	{Quote}
+	(
+		{Token.string == "wherever"}
+		{Token.string == "occurring"}
+	):extra
+)
+-->
+	:for.Location = {type = "For", subType = "Words", position = "ALL"},
+	:extra.Extra = {type = "ForWherever"}
+
+
+Rule: ForAllInstances
+(
+	({Token.root == "for"}):for
+	(
+		{Token.string == "each"}
+		{Token.string == "reference"}
+		{Token.string == "to"}
+	)
+	{Quote}
+)
+-->
+	:for.Location = {type = "For", subType = "Words", position = "ALL"}
+
+
+Rule: ForNthWordInstance
+(
+	({Token.root == "for"}):for
+	(
+		{Quote} |
+		{Anaphor.type == "Words"}
+	)
+	(NTHWORDINSTANCE)
+)
+-->
+	:for.Location = {type = "For", subType = "Words"}
+//	:for.Location = {type = "For", subType = "Words", position = :position.Token.string}
+
+Rule: LastWordInstance
+(
+	(
+		{Token.root == "the"}
+		{Token.root == "final"}
+	):for
+	{Quote}
+)
+-->
+	:for.Location = {type = "Words", position = "Last"}
+
+
+// order before words from ... to ...
+Rule: SignatureProvision
+(
+	{Token.string=="the"}
+	{Token.string==~"(words)|(sentence)|(paragraph)"}
+	(
+		({Token.string=="which"})?
+		{Token.string=~"^(from)|(begin)"}
+	)?
+	{Quote.type=="Signature"}
+	(
+		{Token.string=="to"}
+		{Quote}
+	)?
+):match
+-->
+:match.Location={type="Signature"}
+
+
+Rule: Words
+(
+	(
+		{Token.root == "the"}
+		{Token.root == "word"}
+	):words
+	({Token.string == ","})?
+	{Quote}
+)
+-->
+	:words.Location = {type = "Words"}
+
+	
+/* Matches against some loosely defined text following a quote */
+Rule: WordsFrom
+(
+	(
+		{Token.root == "the"}
+		{Token.string == "words"}
+		(
+			{Token.string == "from"} |
+			{Token.string == "following"} |
+			(
+				{Token.string == "beginning"}
+				{Token.string == "with"}
+			)
+		)
+	):words
+	{Quote}
+	(NTHWORDINSTANCE)?
+)
+-->
+	:words.Location = {type = "WordsFrom"}
+//	:words.Location = {type = "WordsFrom", position = :position.Token.string}
+
+Rule: WordsFromPre
+(
+	(
+		{Token.root == "the"}
+		{Token.string == "words"}
+		{Token.string == "from"}
+		{Token.string == "the"}
+		(POSITION):position
+	):words
+	{Quote}
+)
+-->
+	:words.Location = {type = "WordsFrom", position = :position.Token.string}
+
+
+Rule: OmitFrom
+(
+	{Token.root == "omit"}
+	({Token.string == "from"}):words
+	{Quote}
+)
+-->
+	:words.Location = {type = "WordsFrom"}
+
+Rule: OmitFromTo
+(
+	{Token.root == "omit"}
+	({Token.string == "from"}):words
+	{Quote}
+	({Token.string == "to"}):wordsTo
+	{Quote}
+)
+-->
+	:words.Location = {type = "WordsFrom"},
+	:wordsTo.Location = {type = "WordsTo"}
+	
+
+
+Rule: WordsFromTo
+(
+	(
+		(
+			{Token.root == "the"}
+			{Token.string == "words"}
+			{Token.string == "from"}
+			(POSITION)?:position
+		) |
+		(
+			{Token.root == "for"}
+		)
+	):wordsFrom
+	{Quote}
+	({Token.string == "to"}):wordsTo
+	{Quote}
+)
+-->
+	:wordsFrom.Location = {type = "WordsFrom"},
+	:wordsTo.Location = {type = "WordsTo"}
+
+
+Rule: WordsFromBeginningTo
+(
+	(
+		{Token.root == "the"}
+		{Token.string == "words"}
+		{Token.string == "from"}
+		{Token.string == "the"}
+		{Token.string == "beginning"}
+		(
+			{Token.string == "of"}
+			{Token.string == "the"}
+			{Token.string == "paragraph"}
+		)?
+	):wordsFrom
+	({Token.string == "to"}):wordsTo
+	{Quote}
+)
+-->
+	:wordsFrom.Location = {type = "WordsFrom"},
+	:wordsTo.Location = {type = "WordsTo"}
+
+
+Rule: WordsInPosition
+(
+	(
+		({Token.root == "for"}):for
+		{Token.string == "the"}
+		(POSITION):position
+		{Token.string == "occurrence"}
+		{Token.string == "of"}
+	):words
+	{Quote}
+)
+-->
+	:for.Location = {type = "For", subType="Words", position = :position.Token.string}
+
+
+Rule: WordsToPositionBefore
+(
+	(
+		(POSITION):position
+		{Token.string == "occurrence"}
+		{Token.string == "of"}
+	):words
+	{Quote}
+)
+-->
+	:words.Location = {type = "WordsTo", position = :position.Token.string}
+
+
+Rule: WordsToPositionAfter
+(
+	({Token.string == "to"}):words
+	{Quote}
+	(NTHWORDINSTANCE)
+)
+-->
+	:words.Location = {type = "WordsTo"}
+//	:words.Location = {type = "WordsTo", position = :position.Token.string}
+
+
+Rule: BeforeWords
+(
+	(
+		{Token.root == "before"}
+		(
+			{Token.string == "the"}
+			{Token.root == "word"}
+		)?
+	):words
+	{Quote}
+)
+-->
+	:words.Location = {type = "BeforeWords"}
+
+/* The 'after words' group of rules use the words as positioning anchors. The words themselves are not affected */
+Rule: AfterWords
+(
+	(
+		{Token.root == "after"}
+		({Token.string == "the"})?
+		(
+			(POSITION)
+		)?:position
+		(
+			(
+				{Token.string == "mention"}
+				{Token.string == "of"}
+			) |
+			(
+				{Token.string == "occurrence"}
+				{Token.string == "of"}
+			) |
+			(
+				{Token.string == "reference"}
+				{Token.string == "to"}
+			)			
+		)?
+	):words
+	{Quote}
+)
+-->
+	:words.Location = {type = "AfterWords", position = :position.Token.string}
+
+
+Rule: AfterAllWords
+(
+	(
+		{Token.root == "after"}
+		(
+			{Token.string == "each"} |
+			{Token.string == "every"}
+		)?:position
+		(
+			(
+				{Token.string == "occurrence"}
+				{Token.string == "of"}
+			) |
+			(
+				{Token.string == "reference"}
+				{Token.string == "to"}
+			)			
+		)?
+	):words
+	{Quote}
+)
+-->
+	:words.Location = {type = "AfterWords", position = "All"}
+
+
+Rule: AfterWordsA
+(
+	({Token.root == "after"}):words
+	{Quote}
+	{Token.string == "the"}
+	(POSITION):position
+	{Token.string == "time"}
+	{Token.string == "it"}
+)
+-->
+	:words.Location = {type = "AfterWords", position = :position.Token.string}
+
+Rule: AfterWordsB
+(
+	({Token.root == "after"}):words
+	{Quote}
+	({Token.string == ","})?
+	{Token.string == "where"}
+	{Token.string == "it"}
+	{Token.string == "appears"}
+	{Token.string == "for"}
+	{Token.string == "the"}
+	(POSITION):position
+	{Token.string == "time"}
+)
+-->
+	:words.Location = {type = "AfterWords", position = :position.Token.string}
+
+
+Rule: AfterWords2
+(
+	(
+		{Token.root == "after"}
+		{Token.string == "the"}
+		{Token.root == "word"}
+	):words
+	{Quote}
+	(NTHWORDINSTANCE)?
+)
+-->
+	:words.Location = {type = "AfterWords"}
+//	:words.Location = {type = "AfterWords", position = :position.Token.string}
+
+
+Rule: PrecedingWords
+(
+	(
+		{Token.root == "the"}
+		({Token.root == "word"})?
+	):words
+	{Quote}
+	(
+		(
+			({Token.string == "immediately"})?
+			{Token.string == "preceding"}
+		) |
+		(
+			({Token.string == "immediately"})?
+			{Token.string == "before"}
+			{Token.string == "it"}
+		)		
+	):words2
+)
+-->
+	:words.Location = {type = "Words", subType = "Preceding"}
+
+/* In this instance we're latching onto a phrase that precedes the quote */
+/* The operation will be on the actual words */
+/* Where there are both phrases before and after that we could use we prefer before */
+Rule: WordsFollowing
+(
+	(
+		{Token.root == "the"}
+		({Token.root == "word"})?
+	):words
+	{Quote}
+	(
+		(
+			{Token.string == "which"}
+			{Token.string == "follows"}
+		) |
+		(
+			{Token.string == "immediately"}
+			{Token.string == "following"}
+		)		
+	):words2
+)
+-->
+	:words.Location = {type = "Words", subType = "Following"}
+
+/* In this instance we're latching onto a phrase that follows the quote */
+/* The operation will be on the actual words */
+Rule: FollowingWords
+(
+	{Quote}
+	(
+		(
+			{Token.string == "at"}
+			{Token.string == "the"}
+			{Token.string == "end"}
+			{Token.string == "of"}
+			{Token.string == "it"}
+		) |
+		(
+			{Token.string == "after"}
+			{Token.string == "it"}
+		) |
+		(
+			{Token.string == "following"}
+			{Token.string == "it"}
+		) |
+		(
+			{Token.string == "immediately"}
+			{Token.string == "following"}
+		)
+	):words
+)
+-->
+	:words.Location = {type = "FollowingWords", subType = "After"}
+
+Rule: WordsAfter
+(
+	(
+		({Token.root == "in"})?
+		{Token.string == "the"}
+		{Token.string == "words"}
+		{Token.string == "following"}
+	):after
+	(
+		{LegRef} |
+		(
+			{Token.string == "those"}
+			{Token.string == "paragraphs"}
+		)
+	)
+)
+-->
+	:after.Location = {type = "WordsAfter"}
+
+Rule: OpeningWords
+(
+	({Token.root == "in"})?
+	{Token.string == "the"}
+	(	{Token.string ==~ "(opening)|(closing)"} | 
+		(	{Token.string=="full"}
+			{Token.string=="out"}
+		)
+	)
+	{Token.string == "words"}
+	(	{Token.string=="of"}
+		{Token.string=="that"}
+		{Token.string=="paragraph"}
+	)?
+):match
+-->
+:match.Location = {type = "OpeningWords"}
+
+Rule: InDefinition
+(
+	(
+		{Token.root == "in"}
+		{Token.string == "the"}
+		{Token.root == "definition"}
+		(
+			{Token.string == "of"}
+			({Token.string == "a"})?
+		)?
+	):inDefinition
+	{Quote}
+)
+-->
+	:inDefinition.Location = {type = "InDefinition"}
+
+
+Rule: ForDefinition
+(
+	(
+		{Token.root == "for"}
+		{Token.string == "the"}
+		{Token.string == "definition"}
+		(
+			{Token.string == "of"}
+			({Token.string == "a"})?
+		)?
+	):forDefinition
+	{Quote}
+)
+-->
+	:forDefinition.Location = {type = "For", subType="Definition"}
+
+
+Rule: BeforeDefinition
+(
+	(
+		{Token.root == "before"}
+		{Token.string == "the"}
+		{Token.string == "definition"}
+		(
+			{Token.string == "for"} |
+			{Token.string == "of"}
+		)
+	):beforeDefinition
+	{Quote}
+)
+-->
+	:beforeDefinition.Location = {type = "BeforeDefinition"}
+
+
+Rule: AfterDefinition
+(
+	(
+		{Token.root == "after"}
+		{Token.string == "the"}
+		{Token.string == "definition"}
+		(
+			{Token.string == "for"} |
+			{Token.string == "of"}
+		)
+	):afterDefinition
+	{Quote}
+)
+-->
+	:afterDefinition.Location = {type = "AfterDefinition"}
+
+
+Rule: Definition
+(
+	(
+		{Token.string == "the"}
+		{Token.string == "definition"}
+		(
+			{Token.string == "for"} |
+			{Token.string == "of"}
+		)
+	):definition
+	({Token.string == "the"})?
+	{Quote}
+)
+-->
+	:definition.Location = {type = "Definition"}
+
+
+Rule: Definitions
+(
+	(
+		{Token.string == "the"}
+		{Token.string == "definitions"}
+		(
+			{Token.string == "for"} |
+			{Token.string == "of"}
+		)
+	):definition
+	(
+		{Quote} |
+		{Token.string == "\u2013"} |
+		{Token.string == "\u2013\u2013"} |
+		{Token.string == "\u2014"} |
+		{Token.string == "--"} |
+		{Token.string == "-"}
+	)
+)
+-->
+	:definition.Location = {type = "Definition", count = "Many"}
+
+
+Rule: EndOfDefinition
+(
+	(
+		({Token.string=="at"})?
+		({Token.string=="the"})?
+		{Token.root == "end"}
+		{Token.root == "of"}
+		{Token.string == "the"}
+		{Token.string == "definition"}
+		(
+			{Token.string == "for"} |
+			{Token.string == "of"}
+		)
+	):ofDefinition
+	{Quote}
+)
+-->
+	:ofDefinition.Location = {type = "AtEndOfDefinition"}
+
+
+Rule: OfDefinition
+(
+	(
+		{Token.root == "of"}
+		{Token.string == "the"}
+		{Token.string == "definition"}
+		(
+			{Token.string == "for"} |
+			{Token.string == "of"}
+		)
+	):ofDefinition
+	{Quote}
+)
+-->
+	:ofDefinition.Location = {type = "OfDefinition"}
+
+Rule: Designated
+(
+	(
+		{Token.string == "designated"}
+		{Token.string == "for"}
+		{Token.string == "the"}
+		{Token.root == "purpose"}
+		{Token.string == "of"}
+	) |
+	(
+		{Token.string == "in"}
+		{Token.string == "pursuance"}
+		{Token.string == "of"}
+	)	
+):annotation
+-->
+	:annotation.Location = {type = "Designated"}
+
+Rule: Of
+(
+	({Token.string == "of"}):of
+	{LegRef}
+)
+-->
+	:of.Location = {type = "Of"}
+
+Rule: ForRef
+(
+	({Token.root == "for"}):for
+	{LegRef}
+)
+-->
+	:for.Location = {type = "ForRef"}
+
+Rule: AtEndOfRef
+(
+	(
+		{Token.root == "at"}
+		{Token.string == "the"}
+		{Token.string == "end"}
+		{Token.string == "of"}
+	):endOf
+	{LegRef}
+)
+-->
+	:endOf.Location = {type = "AtEndOf"}
+
+
+Rule: BeforeRef
+(
+	(
+		{Token.root == "before"} |
+		{Token.root == "above"}
+	):before
+	{LegRef}
+)
+-->
+	:before.Location = {type = "BeforeRef"}
+
+
+Rule: AfterRef
+(
+	({Token.root ==~ "(after)|(follow)"}):after
+	{LegRef}
+)
+-->
+	:after.Location = {type = "AfterRef"}
+
+
+Rule: WhereOccurringIn
+(
+	(
+		{Token.string == "where"}
+		{Token.string == "occurring"}
+		{Token.string == "in"}
+	):occurring
+	{LegRef}
+)
+-->
+	:occurring.Location = {type = "OccurringIn"}
+
+
+Rule: AtTheBeginning
+(
+	(
+		{Token.root == "at"}
+		{Token.string == "the"}
+		{Token.string == "beginning"}
+	):begins
+	({Token.string == ","})?
+	{Action}
+)
+-->
+	:begins.Location = {type = "AtTheBeginning"}
+
+Rule: AtTheBeginning2
+(
+	{LegPnumber}
+	(
+		{Token.root == "at"}
+		{Token.string == "the"}
+		{Token.string == "beginning"}
+	):begins
+)
+-->
+	:begins.Location = {type = "AtTheBeginning"}
+
+Rule: AtTheBeginningPrefixAction
+(
+	{Action}
+	(
+		{Token.root == "at"}
+		{Token.string == "the"}
+		{Token.string == "beginning"}
+	):end
+)
+-->
+	:end.Location = {type = "AtTheBeginning"}
+
+
+Rule: AtTheEnd
+(
+	(
+		{Token.root == "at"}
+		({Token.string == "the"})?
+		{Token.string == "end"}
+	):end
+	({Token.string == ","})?
+	{Action}
+)
+-->
+	:end.Location = {type = "AtTheEnd"}
+
+
+Rule: AtTheEndPrefixAction
+(
+	{Action}
+	(
+		{Token.root == "at"}
+		{Token.string == "the"}
+		{Token.string == "end"}
+	):end
+)
+-->
+	:end.Location = {type = "AtTheEnd"}
+
+
+Rule: AtTheEnd2
+(
+	{LegPnumber}
+	(
+		{Token.root == "at"}
+		{Token.string == "the"}
+		{Token.string == "end"}
+	):end
+	{Token.string != "of"}
+)
+-->
+	:end.Location = {type = "AtTheEnd"}
+
+
+Rule: TheEnd
+(
+	(
+		{Token.string == "the"}
+		{Token.string == "end"}
+		(
+			{Token.string == "of"}
+			({Token.string == "the"})?
+			{Token.string ==~ "(places?)|(sentences?)|((sub-?)?paragraphs?)|(indents?)"}
+		)?
+	):end
+)
+-->
+	:end.Location = {type = "TheEnd"}
+
+
+Rule: AppropriatePlace
+(
+	(
+		(
+			{Token.root == "at"} |
+			{Token.root == "in"}
+		)
+		{Token.string == "the"}
+		{Token.string == "appropriate"}
+		(
+			{Token.string == "place"} |
+			{Token.string == "places"}
+		)
+		(
+			{Token.string == "\u2013"} |
+			{Token.string == "\u2013"} |
+			{Token.string == "\u2014"} |
+			{Token.string == "\u2014"} |
+			{Token.string == "--"} |
+			{Token.string == "--"}
+		)?
+	)
+	(
+		{Token.string == "in"}
+		{Token.string == "the"}
+		(
+			{Token.root == "list"} |
+			{Token.root == "table"}
+		):subPlace
+	)?
+):place
+-->
+	:place.Location = {type = "AppropriatePlace", position = :subPlace.Token.string}
+
+
+Rule: Legislation
+(
+	(
+		(
+			{Token.string == "of"} |
+			(
+				{Token.string == "to"}
+				({Token.string == ","})?
+			)
+		)
+		({Token.string == "the"})?
+	):legislation
+	{Legislation}
+)
+-->
+	:legislation.Location = {type = "Legislation"}
+
+
+Rule: InLegislation
+(
+	(
+		{Token.root == "in"} 
+		({Token.string == "the"})?
+	):legislation
+	{Legislation}
+)
+-->
+	:legislation.Location = {type = "InLegislation"}
+
+Rule: Table
+(
+	{Token.string == "the"}
+	(POSITION):position	
+	{Token.string == "column"}
+	{Token.string == "of"}
+	{Token.string == "the"}
+	{Token.root == "table"}
+):table
+-->
+	:table.Location = {type = "Table", position = :position.Token.string}
+
+Rule: Table
+(
+	{Token.string == "the"}
+	(POSITION):position	
+	{Token.string == "column"}
+):match
+-->
+	:match.Location = {type = "Column", position = :position.Token.string}
+
+
+Rule: TableFragment
+(
+	{Token.root == "in"}
+	{LegRef}
+	{Token.string == "of"}
+	{Token.string == "the"}
+	{Token.root == "table"}
+):table
+-->
+	:table.Location = {type = "Table"}
+
+Rule: BeforeTable
+(
+	{Token.string == "before" }
+	{Token.string == "the"}
+	{Token.root == "table"}
+):table
+-->
+	:table.Location = {type = "BeforeTable"}
+
+Rule: AfterTable
+(
+	{Token.string == "after" }
+	{Token.string == "the"}
+	{Token.root == "table"}
+):table
+-->
+	:table.Location = {type = "AfterTable"}
+
+Rule: TheTable
+(
+	{Token.string == "the"}
+	{Token.root == "table"}
+):table
+-->
+	:table.Location = {type = "Table"}
+
+Rule: TheEntry
+(
+	{Token.string == "the"}
+	{Token.root == "entry"}
+):match
+-->
+	:match.Location = {type = "Entry"}
+
+
+Rule: InRelationTo
+(
+	(
+		(
+			{Token.string == "to"}
+			{Token.string == "the"}
+			{Token.string == "extent"}
+			{Token.string == "to"}
+			{Token.string == "which"}
+		) |
+		(
+			{Token.string == "as"}
+		)
+	)
+	{Token.string == "it"}
+	{Token.string == "relates"}
+	{Token.string == "to"}
+):relates
+-->
+	:relates.Location = {type = "Relates"}
+
+
+Rule: RelatesAvoid
+(
+	{Location.type == "RelatedEntry"} |
+	{Location.type == "BeforeRelatedEntry"} |
+	{Location.type == "AfterRelatedEntry"} |
+	{Location.type == "AfterEntryForRef"}
+)
+-->{}
+
+
+Rule: RelationRelates
+(
+	(
+		{Token.string == "relating"}
+		{Token.string == "to"}
+	):relates
+	(
+		{Relation} |
+		{Token.string == "\u2014"}
+	)
+)
+-->
+	:relates.Location = {type = "Relates"}
+
+
+Rule: ApplyTo
+(
+	{Token.string == "as"}
+	{Token.string == "they"}
+	{Token.string == "apply"}
+	{Token.string == "to"}
+):relates
+-->
+	:relates.Location = {type = "ApplyTo"}
+
+Rule: NotInForce
+(
+	{Token.string == "as"}
+	(
+		(
+			{Token.string == "it"}
+			{Token.string == "is"}	
+		) |
+		(
+			{Token.string == "they"}
+			{Token.string == "are"}	
+		)
+	)?
+	{Token.string == "not"}
+	{Token.string == "already"}
+	{Token.string == "in"}
+	(
+		{Token.string == "force"} |
+		{Token.string == "operation"}
+	)
+):relates
+-->
+	:relates.Location = {type = "NotInForce"}
+
+Rule: SubjectTo
+(
+	(
+		{Token.root == "subject"}
+		{Token.string == "to"}
+	):relates
+	(
+		{LegRef} |
+		{CrossRef}
+	)
+)
+-->
+	:relates.Location = {type = "SubjectTo"}
+
+	
+Rule: ExceptSoFar
+(
+	{Token.string == "except"}
+	{Token.string == "so"}
+	{Token.string == "far"}	
+):relates
+-->
+	:relates.Location = {type = "ExceptSoFar"}
+	
+Rule: AsRepeals
+(
+	{Token.string == "as"}
+	{Token.string == "it"}
+	{Token.string == "repeals"}	
+):relates
+-->
+	:relates.Location = {type = "AsRepeals"}
+
+Rule: AsSubstitutedBy
+(
+	{Token.string == "as"}
+	{Token.string == "substituted"}
+	{Token.string == "by"}	
+):relates
+-->
+	:relates.Location = {type = "AsSubstitutedBy"}
+
+Rule: RefDefinition
+(
+	(
+		{Token.root == "of"}
+		{Token.string == "that"}
+		{Token.string == "definition"}
+	)
+):definition
+-->
+	:definition.Anaphor = {type = "Definition"}
+
+
+
+/* This section of rules pertain to enabling powers. We will add a context of EnablingPower here for use in later processing */
+
+Rule: InAccordanceWith
+(
+	(
+		{Token.root == "in"}
+		{Token.string == "accordance"}
+		{Token.string == "with"}
+	):annotation
+	(
+		{LegRef} |
+		{Legislation}
+	)
+)
+-->
+	:annotation.Location = {type = "Accordance", context = "EnablingPower"}
+
+
+Rule: ExtendingLegislaton
+(
+	(
+		{Token.root == "as"}
+		{Token.string == "extended"}
+		{Token.string == "by"}
+	):annotation
+	(
+		{Legislation}
+	)
+)
+-->
+	:annotation.Location = {type = "ExtendedLegislation", context = "EnablingPower"}
+
+
+Rule: NthWordInstance
+(
+	({LegPnumber})?
+	(NTHWORDINSTANCE):match
+)
+-->
+	:match.Location = {type = "NthWordInstance"}
+
+
+Rule: places
+({Token.string=="after"})?:after
+(	
+	(
+		({Token.string=="the"})?
+		(
+			(
+				({Token.string==~"(first)|(second)|(third)|(fourth)|(fifth)|(sixth)|(seventh)|(eighth)|(ninth)|(tenth)|(eleventh)|(twelfth)|(thirteenth)|(fourteenth)|(fifteenth)|(last)|(both)|(every)|(each)"})
+				({Token.string==~"(two)|(three)|(four)|(five)|(six)|(seven)|(eight)|(nine)"})?
+				({Token.string=="unnumbered"})?
+			) |
+			({Token.string=="unnumbered"})
+		)
+		{Token.string==~"(places?)|(sentences?)|((sub-?)?paragraphs?)|(indents?)"}
+		(
+			(
+				{Token.string=="the"}
+				{Token.string=="words"}
+				{Token.string=="occur"}
+			)
+			|
+			(
+				{Token.string=="it"}
+				{Token.string=="occurs"}
+			)
+		)?
+	) |
+	(
+		({Token.string=="the"})?
+		({Token.string=="unnumbered"})?
+		{Token.string==~"(sentences?)|((sub-?)?paragraphs?)|(indents?)"}
+		({Token.string=="immediately"})?
+		(	
+			{Token.string=="commencing"} |
+			{Token.string=="following"} |
+			{Token.string=="ending"} |
+			(	{Token.string=="which"} 
+				{Token.string==~"(follow)|(commence)|(start)|(begin)|(finish)|(end)"}
+				({Token.string=="with"})?
+				(	
+					{Token.string=="the"} 
+					{Token.string=="words"}
+				)?
+			)
+		)
+		(
+			{Quote}
+		|	{LegRef}
+		|	({Token.string=="the"} {Token.string==~"([tT]able)|([Ff]orm)"})
+		)
+	)
+):match
+-->
+:after.Location = {type="AfterMisc"},
+:match.Location = {type="Misc"}
+
+Rule: In
+(
+	({LegPnumber} | {Token.string==","})
+	(({Token.root=="in"})
+		(
+			{Token.string=="each"}
+			{Token.string=="of"}
+		)?
+	):in
+)
+-->
+	:in.Location = {type = "In"}
+
+Rule: to_of
+(
+	{LegRef.type=="appendix"}
+	({Token.string=="to"}):match
+	{LegRef.type=="annex"}
+)
+-->
+	:match.Location = {type = "Of"}
+
+Rule: theFormEntitled
+(
+	({LegRef.type=="form"}):form
+	{Token.string==~"(entitled)|(headed)"}
+	{Quote}
+):match
+-->
+:match.Location={type="form",list=:form.LegRef.list}
+
+
+Rule: theintroduction
+(
+	{Token.string ==~ "[Tt]he"}
+	{Token.string ==~ "[Ii]ntroduction"}
+):match
+-->
+:match.Location = {type = "Introduction"}
+
+// Added to deal with situation like "the following instruments are revoked"
+Rule: theFollowing
+(
+	{Token.string==~"[Tt]he"}
+	{Token.string=="following"}
+	{Token.string==~"(instruments)|(provisions)|(regulations)|(rules)|(sections)|(articles)|(orders)|(paragraphs)|(points)"}
+):match
+-->
+:match.Location={type="TheFollowing"}
+
+// Added to deal with situation like "In each of the regulations specified in paragraph2 ..."
+//                                       ^^^^^^^^^^^^^^^^^^^^^^^
+Rule: each
+(
+	{Token.string=="each"}
+	{Token.string=="of"}
+	{Token.string=="the"}
+	{Token.string==~"(instruments)|(provisions)|(regulations)|(rules)|(sections)|(articles)|(orders)"}
+):match
+-->
+:match.Location={type="Each"}
+
+// Added to deal with situation like "The regulations specified for the purpose of paragraph(1) are:-"
+Rule: SpecifiedRefsFollow
+(
+	({Token.string==~"[Tt]he"})?
+	{Token.string==~"(instruments)|(provisions)|(regulations)|(rules)|(sections)|(articles)|(orders)"}
+	{Token.string=="specified"}
+	{Token.string=="for"}
+	{Token.string=="the"}
+	{Token.string=="purpose"}
+	{Token.string=="of"}
+	({LegRef}):referrer
+	{Token.string=="are"}
+):match
+-->
+:match.SpecifiedRefsFollow={
+referrerList=:referrer.LegRef.list,
+referrerType=:referrer.LegRef.type
+}
+
+// Added to deal with situations where provisions are mentioned which are not relevant to effects extraction
+// but cause it to be disrupted unless dealt with.
+// " ... implementing Articles 85 and 86 of the Treaty ... "
+// " ... on the application of Article 85(3) of the Treaty ... "
+// " ... laid down in Articles 81 and 82 of the Treaty ... "
+Rule: IrrelevantReference
+(
+	(
+		{Token.string=="implementing"}
+	|
+		( {Token.string=="on"}
+			{Token.string=="the"}
+			{Token.string=="application"}
+			{Token.string=="of"}
+		)
+	|
+		( {Token.string=="laid"}
+			{Token.string=="down"}
+			{Token.string=="in"}
+		)
+	)
+	{LegRef}
+):match
+-->
+:match.IrrelevantReference={}
+
+Rule: TheWords
+(
+	{Token.string=="the"}
+	{Token.string=="words"}
+):match
+-->
+:match.Location={type="TheWords"}
+
+Rule: AndWord
+(
+	({LegRef})?
+	(
+		{Token.string=="and"}
+		{Token.string=="the"}
+		({Quote}):quote
+		({Token.string=="immediately"})?
+		{Token.string==~"(before)|(after)"}
+		({Token.string=="it"}|{LegRef})?
+	):match
+)
+-->
+:match.AndWord={suffix=:quote.Quote.effectText}
+
+Rule: AndCrossHeading
+(
+	{Token.string=="and"}
+	//({Token.string=="in"})?
+	{Token.string=="the"}
+	{Token.string=="italic"}
+	{Token.string=="heading"}
+	({Token.string=="immediately"})?
+	{Token.string==~"(before)|(after)"}
+	({Token.string=="it"}|{LegRef})?
+):match
+-->
+:match.AndWord={suffix=cross-heading}
+
+Rule: AndLegRef
+(
+	({Token.string=="and"}):match
+	{LegRef}
+)
+-->
+:match.Location={type="And"}
+
+Rule: LegRefAnd
+(
+	{LegRef}
+	({Token.string=="and"}):match
+)
+-->
+:match.Location={type="And"}
+
+Rule: ThoseWords
+(
+	({LegPnumber})?
+	(
+		(
+			({Token.string ==~ "([Ii]n)|([Bb]efore)|([Aa]fter)"})
+			|
+			(
+				{Token.string ==~ "[Aa]t"}
+				{Token.string == "the"}
+				{Token.string ==~ "(beginning)|(end)"}
+				{Token.string == "of"}
+			)
+		)
+		{Token.string == "those"}
+		{Token.string == "words"}
+	):match
+)
+-->
+:match.Location={type="ThoseWords"}

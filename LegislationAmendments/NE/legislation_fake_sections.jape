@@ -1,0 +1,41 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_fake_sections.jape
+* Author:		Paul Appleby
+* Description:	Other references to things that initially looked like sections
+* Date created:	06/05/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	FakeSections
+Input:  Token LegRef Quote Location Action
+Options: control = all
+
+Rule: RefOfXXX
+(
+	{LegRef}
+	{Token.string == "of"}
+	{Token.category == "DT"}
+	({Token.category == "JJ"})?
+	{Token.root == "step"}
+):otherRef
+-->
+	:otherRef.OtherRef = {}
+
+
+

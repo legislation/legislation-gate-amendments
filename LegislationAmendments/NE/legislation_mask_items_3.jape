@@ -1,0 +1,205 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_mask_items_3.jape
+* Author:	Paul Appleby
+* Description:	Annotations for markup from the legislation we want to ignore
+* Date created:	05/04/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	Mask3
+Input:  LegP1group Mask Sentence LegText
+Options: control = appelt
+
+/* In this instance we try to only process the smallest containing element that makese sense as these mask types can be specific to structures. For instance if occurs in a P1 other P1s in a P1group may want to retain markup */
+Rule: References
+(
+	{Mask.type == "GeneralMask"} |
+	{Mask.type == "ReferencesTo"} |
+	{Mask.type == "Exception"} |
+	{Mask.type == "ProvisionsOf"} |
+	{Mask.type == "ComingIntoForce"} |
+	{Mask.type == "Action"} |
+	{Mask.type == "EffectsListed"} |
+	{Mask.type == "Contains"} |
+	{Mask.type == "PnumberBrackets"} |
+	{Mask.type == "ReferencesTo"} |
+	{Mask.type == "ProvisionsOf"} |
+	{Mask.type == "Consequential"} |	
+	{Mask.type == "ComingIntoForce"} |
+	{Mask.type == "EffectsListed"} |
+	{Mask.type == "CertifiedCopy"} |
+	{Mask.type == "Assent"} |
+	{Mask.type == "Interpretation"} |
+	{Mask.type == "Cited"} |
+	{Mask.type == "Unhandled"} |
+	{Mask.type == "Under"} |
+	{Mask.type == "May"} |
+	{Mask.type == "UnderLegislation"} |
+	{Mask.type == "Contains"}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet coveringSet = inputAS.getCovering("", legStart, legEnd);
+	AnnotationSet p2Set = coveringSet.get("LegP2");
+	if (p2Set.size() > 0) {
+		Annotation coveringAnn = p2Set.iterator().next();
+		FeatureMap features = Factory.newFeatureMap();
+		features.put("type", "P2");
+		try {
+			outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "Mask", features);				
+		}
+		catch (Exception e) {
+			System.err.println("Mask error: " + e.getMessage());
+		}
+	}
+	else {
+		AnnotationSet p1Set = coveringSet.get("LegP1");
+		if (p1Set.size() > 0) {
+			Annotation coveringAnn = p1Set.iterator().next();
+			FeatureMap features = Factory.newFeatureMap();
+			features.put("type", "P1");
+			try {
+				outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "Mask", features);				
+			}
+			catch (Exception e) {
+				System.err.println("Mask error: " + e.getMessage());
+			}
+		}
+		else {
+			AnnotationSet pSet = coveringSet.get("LegP");
+			if (pSet.size() > 0) {
+				Annotation coveringAnn = pSet.iterator().next();
+				FeatureMap features = Factory.newFeatureMap();
+				features.put("type", "P");
+				try {
+					outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "Mask", features);				
+				}
+				catch (Exception e) {
+					System.err.println("Mask error: " + e.getMessage());
+				}
+			}
+			else {
+				AnnotationSet p1groupSet = coveringSet.get("LegP1group");
+				if (p1groupSet.size() > 0) {
+					Annotation coveringAnn = p1groupSet.iterator().next();
+					FeatureMap features = Factory.newFeatureMap();
+					features.put("type", "P1group");
+					try {
+						outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "Mask", features);				
+					}
+					catch (Exception e) {
+						System.err.println("Mask error: " + e.getMessage());
+					}
+				}
+			}
+		}
+	}
+}
+
+
+/* In this instance we try to only process the smallest containing element that makese sense as these mask types can be specific to structures. For instance if occurs in a P1 other P1s in a P1group may want to retain markup */
+Rule: SubReferences
+(
+	{Mask.type == "UnhandledSub"}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet coveringSet = inputAS.getCovering("", legStart, legEnd);
+	AnnotationSet p3Set = coveringSet.get("LegP3");
+	if (p3Set.size() > 0) {
+		Annotation coveringAnn = p3Set.iterator().next();
+		FeatureMap features = Factory.newFeatureMap();
+		features.put("type", "P3");
+		try {
+			outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "Mask", features);				
+		}
+		catch (Exception e) {
+			System.err.println("Mask error: " + e.getMessage());
+		}
+	}
+	else {
+		AnnotationSet p2Set = coveringSet.get("LegP2");
+		if (p2Set.size() > 0) {
+			Annotation coveringAnn = p2Set.iterator().next();
+			FeatureMap features = Factory.newFeatureMap();
+			features.put("type", "P2");
+			try {
+				outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "Mask", features);				
+			}
+			catch (Exception e) {
+				System.err.println("Mask error: " + e.getMessage());
+			}
+		}
+		else {
+			AnnotationSet p1Set = coveringSet.get("LegP1");
+			if (p1Set.size() > 0) {
+				Annotation coveringAnn = p1Set.iterator().next();
+				FeatureMap features = Factory.newFeatureMap();
+				features.put("type", "P1");
+				try {
+					outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "Mask", features);				
+				}
+				catch (Exception e) {
+					System.err.println("Mask error: " + e.getMessage());
+				}
+			}
+			else {
+				AnnotationSet pSet = coveringSet.get("LegP");
+				if (pSet.size() > 0) {
+					Annotation coveringAnn = pSet.iterator().next();
+					FeatureMap features = Factory.newFeatureMap();
+					features.put("type", "P");
+					try {
+						outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "Mask", features);				
+					}
+					catch (Exception e) {
+						System.err.println("Mask error: " + e.getMessage());
+					}
+				}
+				else {
+					AnnotationSet p1groupSet = coveringSet.get("LegP1group");
+					if (p1groupSet.size() > 0) {
+						Annotation coveringAnn = p1groupSet.iterator().next();
+						FeatureMap features = Factory.newFeatureMap();
+						features.put("type", "P1group");
+						try {
+							outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "Mask", features);				
+						}
+						catch (Exception e) {
+							System.err.println("Mask error: " + e.getMessage());
+						}
+					}
+				}
+			}
+		}
+	}
+}
+

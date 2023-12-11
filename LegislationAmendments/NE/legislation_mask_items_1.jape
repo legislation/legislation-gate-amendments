@@ -1,0 +1,53 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_mask_items_1.jape
+* Author:	Paul Appleby
+* Description:	Marks bits of  inline text that should not be processed
+* Date created:	15/02/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	MaskText
+Input:  Token Split Quote LegRef
+Options: control = appelt
+
+
+Rule: AvoidQuote
+(
+	{Quote} |
+	{LegRef}
+)
+-->{}
+
+// We check for Split in case the closing paren is missing
+Rule: MaskParens
+(
+	{Token.string == "("}
+	{Token.string != "and"}
+	(
+		{Token.string != ")", Token.string != "(", !Split} |
+		(
+			{Token.string == "("}
+			({Token.string != ")", !Split})[1,20]
+			{Token.string == ")"}
+		)
+	)[1,50]
+	{Token.string == ")"}
+):annotation
+-->
+	:annotation.Mask = {type = "Text"}

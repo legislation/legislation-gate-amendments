@@ -1,0 +1,38 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_legislation_prework.jape
+* Author:	Paul Appleby
+* Description:	Annotations for identifying potential fragments of text containin Act references
+*		Without doing this processing legislation stages 1 and 3 takes forever
+* Date created:	15/02/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	LegislationPrework
+Input:  LegText
+Options: control = appelt
+
+Rule: Text
+Priority: 10
+(
+	{LegText contains {Token.string == "Act"}} |
+	{LegText contains {Token.string == "Measure"}}
+):text
+-->
+	:text.TempActContainer = {}
+

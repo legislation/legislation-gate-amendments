@@ -1,0 +1,132 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_actions_2.jape
+* Author:	Paul Appleby
+* Description:	Identify 'actions' on legislation after other stuff has been identified
+* Date created:	15/03/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	MoreActions
+Input:  Token LineBreak LegRef Quote Location Action CrossRef
+Options: control = appelt
+
+
+Rule: DeleteLocation
+(
+	(
+		{Token.root == "omit", !Action} |
+		{Token.root == "delete", !Action}
+	):delete
+	(
+		{Location.type == "Words"} |
+		{Location.type == "Sentence"} |		
+		{Location.type == "Definition"} |
+		(
+			{Token.string == "the"}
+			{Location.type == "EntryFor"}
+		)
+	)
+)
+-->
+	:delete.Action = {type = "Delete"}
+ 
+ Rule: DeleteEntry
+ (
+ 	(
+ 		{Token.root == "omit", !Action} |
+		{Token.root == "delete", !Action}
+ 	):delete
+ 	(
+ 		{Location.type == "RelatedEntry"} |
+ 		{Location.type == "EntryFor"}
+ 	)
+ )
+ -->
+ 	:delete.Action = {type = "Delete"}
+
+Rule: DeleteWords
+ (
+ 	({Token.root == "omit", !Action}):delete
+ 	(
+ 		{Location.type == "WordsFrom"} |
+ 		{Location.type == "WordsAfter"}
+ 	)
+ )
+ -->
+ 	:delete.Action = {type = "Delete"}
+
+Rule: Amend
+(
+	({Token.root == "amend"}):action
+	{Location.type == "Table"}
+)
+-->
+	:action.Action = {type = "Amendment", subType = "Table"}
+	
+Rule: Insert
+(
+	(
+		{Token.root == "insert"} |
+		{Token.root == "add"} |
+		{Token.string == "enter"}
+	):action
+	({Token.string == ","})?
+	(
+		{Location.type == "AppropriatePlace"}
+	)
+)
+-->
+	:action.Action = {type = "Insert"}	
+
+Rule: InsertAfter
+(
+	(
+		{Token.root == "insert"} |
+		{Token.root == "add"} |
+		{Token.string == "enter"}
+	):action
+	{Location.type == "AfterRef"}
+)
+-->
+	:action.Action = {type = "Insert"}	
+	
+Rule: DeleteSomething
+(
+	(
+		{Token.string == "Omit", !Action} |
+		{Token.string == "Delete", !Action}
+	):delete
+	{Token.string == "the"}
+)
+-->
+	:delete.Action = {type = "Delete"}
+	
+Rule: DeleteTheFollowing
+(
+	(
+		{Token.root == "omit", !Action} |
+		{Token.root == "Omit", !Action}		
+	):delete
+	{CrossRef.type == "Provision"}
+	(
+		{Token.string == "\u2014"} |
+		{Token.string == "\u2013"} |
+		{Token.string == "\u2013\u2013"}
+	)
+)
+-->
+	:delete.Action = {type = "Delete"}	

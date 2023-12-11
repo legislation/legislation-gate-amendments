@@ -1,0 +1,99 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_clean_before_conjunctions.jape
+* Author:	Paul Appleby
+* Description:	Clean up annotations in certain inline areas
+* Date created:	15/02/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	CleanBeforeConjunctions
+Input:  Quote Relation Mask
+Options: control = appelt
+
+Rule: RemoveInMask
+(
+	{Mask.type == "Text"}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("LegRef");
+	coveringList.add("OtherRef");
+	coveringList.add("LegPnumber");
+	coveringList.add("LegConjunction");
+	coveringList.add("StopConjunction");
+	coveringList.add("Legislation");
+	coveringList.add("Interpretation");
+	coveringList.add("Action");
+	coveringList.add("Anaphor");
+	coveringList.add("Location");
+	coveringList.add("Quote");
+	coveringList.add("Relation");
+	coveringList.add("LegAmendment");
+	coveringList.add("Provisions");
+	coveringList.add("ExtendTo");
+	coveringList.add("ExtentCountries");
+	coveringList.add("SubLocation");
+	coveringList.add("SubLocationGroup");
+	coveringList.add("SubLocationRange");
+	coveringList.add("Date");
+	coveringList.add("CrossRef");
+	coveringList.add("Chronology");
+	coveringList.add("Structure");
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation maskAnn = annotationSet.iterator().next();
+	Long maskStart = maskAnn.getStartNode().getOffset();
+	Long maskEnd = maskAnn.getEndNode().getOffset();
+	
+	AnnotationSet inputSet = inputAS.getContained(maskStart, maskEnd);
+	AnnotationSet removeSet = inputSet.get(coveringList);
+	
+ 	outputAS.removeAll(removeSet);
+}
+
+Rule: RemoveInXXX
+(
+	{Quote} |
+	{Relation}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("LegRef");
+	coveringList.add("OtherRef");
+	coveringList.add("LegPnumber");
+	coveringList.add("LegConjunction");
+	coveringList.add("StopConjunction");
+	coveringList.add("Legislation");
+	coveringList.add("Interpretation");
+	coveringList.add("Action");
+	coveringList.add("Anaphor");
+	coveringList.add("Location");
+	coveringList.add("Provisions");
+	coveringList.add("Date");
+	coveringList.add("CrossRef");
+	coveringList.add("Structure");
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = inputAS.getContained(legStart, legEnd);
+	AnnotationSet removeSet = nestedSet.get(coveringList);
+ 	outputAS.removeAll(removeSet);
+}

@@ -1,0 +1,50 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_mask_clean.jape
+* Author:	Paul Appleby
+* Description:	JAPE pipeline for legislation amendments processing.
+
+* Date created:	15/02/2011
+* This version:	0.1
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+MultiPhase:	LegislationMaskClean
+Phases:
+
+/* Store stuff we will need later. We've already done this but we need to do it again to take account of other parse phases */
+legislation_store_items_for_mask
+
+/* Identify sections of the document that we do not want to process. Any annotations that are 'masked' will be removed before parsing */
+/* Note we need to run clean several times */
+legislation_mask_items_2
+legislation_mask_clean
+legislation_mask_items_3
+legislation_mask_items_3a
+legislation_mask_clean
+/* Now mask out any large blocks with nothing useful in */
+legislation_mask_items_4
+
+legislation_mask_items_partial_clean_3
+legislation_mask_items_partial_clean
+legislation_mask_items_partial_clean_2
+
+/* Clean up annotations. This generally involves removal of unwanted annotations */
+legislation_clean_1
+legislation_clean_2
+
+/* Remove annotations caused by some common XML errors  */
+legislation_errors
+

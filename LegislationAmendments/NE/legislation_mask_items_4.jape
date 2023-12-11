@@ -1,0 +1,63 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_mask_items_4.jape
+* Author:	Paul Appleby
+* Description:	Marks bits of text that should be masked from processing 
+* Date created:	15/02/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	Mask4
+Input:  Token LegRef LegP1group LegP1 LegChapterBlock LegPartBlock LegScheduleBlock
+Options: control = appelt negationGrouping = false
+
+Rule: MaskNoAmendsAvoid
+Priority: 10
+(
+	{LegP1 contains Action, !LegP1 within LegP1group} |
+	{LegP1group contains Action} |
+	{LegPartBlock contains Action, !LegPartBlock contains LegP1group} |
+	{LegChapterBlock contains Action, !LegChapterBlock contains LegP1group} |
+	{LegScheduleBlock contains Action, !LegScheduleBlock contains LegP1group} |
+	{LegP1group within LegAmendment}
+)
+-->{}
+
+
+Rule: MaskRepealsRevocationsAvoid
+Priority: 10
+(
+	{LegP1 contains RepealsRevocations, !LegP1 within LegP1group} |
+	{LegP1group contains RepealsRevocations} |
+	{LegPartBlock contains RepealsRevocations, !LegPartBlock contains LegP1group} |
+	{LegChapterBlock contains RepealsRevocations, !LegChapterBlock contains LegP1group} |
+	{LegScheduleBlock contains RepealsRevocations, !LegScheduleBlock contains LegP1group}
+)
+-->{}
+
+	
+Rule: MaskNoAmends
+(
+	{LegP1, !LegP1 within LegP1group} |
+	{LegP1group} |
+	{LegChapterBlock, !LegChapterBlock contains LegP1group} |
+	{LegPartBlock, !LegPartBlock contains LegP1group} |
+	{LegScheduleBlock, !LegScheduleBlock contains LegP1group}
+):annotation
+-->
+	:annotation.Mask = {type = "NoAction"}

@@ -1,0 +1,43 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: BlockAmendment_context
+Input: LegAmendment LegPblock
+Options: control = all
+
+/*  Add feature to annotations which are within LegAmendments.
+    Makes subsequent checks a lot quicker than using JAPE 'within' operator.
+*/
+
+Rule: BlockAmendment_context
+(
+	{LegAmendment}
+):match
+-->
+{
+	AnnotationSet blockAS= (AnnotationSet)bindings.get("match");
+	for( Annotation blockAnn : blockAS) {
+		String context= (String)blockAnn.getFeatures().get("Context");
+		AnnotationSet containedAS= gate.Utils.getContainedAnnotations(inputAS,blockAnn);
+		for(Annotation containedAnn : containedAS) {
+			FeatureMap fm= containedAnn.getFeatures();
+			fm.put("blockAmendmentContext",context);
+
+			// If annotation is a LegPblock, then add further label the annotations within that
+			if("LegPblock".equals(containedAnn.getType())) {
+				AnnotationSet inPblockAS= gate.Utils.getContainedAnnotations(inputAS,containedAnn);
+				for(Annotation inPblockAnn : inPblockAS) {
+					FeatureMap fm2= inPblockAnn.getFeatures();
+					fm2.put("inPblock","true");
+				}
+			}
+
+		}
+	}
+}

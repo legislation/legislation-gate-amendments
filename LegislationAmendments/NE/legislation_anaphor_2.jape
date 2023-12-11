@@ -1,0 +1,58 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_anaphor_2.jape
+* Author:		Paul Appleby
+* Description:	Identify anaphoric expressions
+* Date created:	05/04/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Anaphor2
+Input:  Token Location
+Options: control = appelt
+
+Rule: RelevantRefAnaphor
+(
+	{Location.type == "Relates"}
+	(
+		{Token.string == "the"} |
+		{Token.string == "that"} |
+		{Token.string == "those"}
+	)
+	(
+		{Token.string == "provision"} |		
+		{Token.string == "provisions"} |
+		{Token.string == "paragraph"} |
+		{Token.string == "paragraphs"}
+	):ref
+)
+-->
+	:ref.Anaphor = {type = "RelevantRef"}
+
+/* The ref subtype 'of' is assumed to be synonymous with the word 'to' */	
+Rule: ToHeadingAnaphor
+(
+	{Location.type == "Heading"}
+	(
+		{Token.string == "that"}
+		(
+			{Token.string == "section"} |
+			{Token.string == "regulation"}
+		)
+	):ref
+)
+-->
+	:ref.Anaphor = {type = "Ref", subType = "Of"}	

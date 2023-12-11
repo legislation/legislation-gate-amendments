@@ -1,0 +1,50 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_quote_1.jape
+* Author:	Stephen Cresswell
+* Description:	Annotation for quote without context
+* Date created:	09/07/2018
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	LegislationQuote1
+Input:  Token LegPnumber LegTableCell
+Options: control = appelt
+
+Rule: Quote
+(
+	{Token.string == "\u201C"}
+	({Token.string!="\u201D",Token.string!="\u201C",Token.string!="\"",!LegPnumber})*
+	({Token.string == "\u201D"})
+):quote
+-->
+	:quote.Quote1 = {rule = "Quote1"}
+
+// Quotes shouldn't span across structure.
+// Allow unclosed quotes to be closed by hitting something that shouldn't be in a quote.
+// E.g. wsi/2017/423 for unclosed quotes across table cells
+Rule: BrokenQuote
+(
+	(
+		{Token.string == "\u201C"}
+		({Token.string!="\u201D",Token.string!="\u201C",Token.string!="\"",!LegPnumber})+
+	):quote
+	({LegPnumber}|{LegTableCell})
+)
+-->
+	:quote.Quote1 = {rule = "BrokenQuote"}

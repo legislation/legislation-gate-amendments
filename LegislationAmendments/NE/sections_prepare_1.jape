@@ -1,0 +1,300 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: sections_prepare_1
+Input: Token SpaceToken LegTitle
+Options: control = appelt
+
+
+Rule: theschedule   
+(
+	{Token.string==~"[Tt]he"}
+	{SpaceToken}
+	{Token.string==~"[Ss]chedule(s)?"}
+):match 
+-->
+:match.theSchedule={}
+
+
+Rule: theannex
+(
+	{Token.string==~"[Tt]he"}
+	{SpaceToken}
+	{Token.string==~"[Aa]nnex"}
+):match 
+-->
+:match.theAnnex={}
+
+Rule: theappendix
+(
+	{Token.string==~"[Tt]he"}
+	{SpaceToken}
+	{Token.string==~"[Aa]ppendix"}
+):match 
+-->
+:match.theAppendix={}
+
+
+Rule: theform
+(
+	{Token.string==~"[Tt]he"}
+	{SpaceToken}
+	{Token.string==~"[Ff]orm(s)?"}
+):match 
+-->
+:match.theForm={}
+
+/*
+Rule: theHeading   
+(
+	{Token.string==~"[Tt]he"}
+	{SpaceToken}
+	{Token.string==~"[Hh]eading"}
+):match 
+-->
+:match.theHeading={}
+*/
+
+Rule: annex      ({Token.string==~"([Aa]nnex(es)?)|(ANNEX)"}):match -->                        :match.partLabel={class="annex"}
+Rule: appendix   ({Token.string==~"[Aa]ppendix(es)?"}):match -->                     :match.partLabel={class="appendix"}
+Rule: chapter    ({Token.string==~"([Cc]hapter(s)?)|(CHAPTER)"}):match -->           :match.partLabel={class="chapter"}
+Rule: group      ({Token.string==~"[Gg]roup(s)?"}):match -->                         :match.partLabel={class="group"}
+Rule: note       ({Token.string==~"[Nn]ote(s)?"}):match -->                          :match.partLabel={class="note"}
+Rule: schedule   ({Token.string==~"([Ss]chedule(s)?)|(SCHEDULE)"}):match -->         :match.partLabel={class="schedule"}
+Rule: section    ({Token.string==~"[Ss]ection(s)?"}):match -->                       :match.partLabel={class="section"}
+Rule: section    ({Token.string==~"[Ss]ub[-]?section(s)?"}):match -->                :match.partLabel={class="subsection"}
+Rule: article    ({Token.string==~"([Aa]rticle(s)?)|(ARTICLE)"}):match -->                       :match.partLabel={class="article"}
+Rule: regulation ({Token.string==~"[Rr]egulation(s)?"}):match -->                    :match.partLabel={class="regulation"}
+Rule: rule       ({Token.string==~"[Rr]ule(s)?"}):match -->                          :match.partLabel={class="rule"}
+Rule: paragraph  ({Token.string==~"[Pp]aragraph(s)?"}):match -->                     :match.partLabel={class="paragraph"}
+Rule: subpara    ({Token.string==~"[Ss]ub[-]?[Pp]aragraph(s)?"}):match -->           :match.partLabel={class="subparagraph"}
+Rule: subsubpara ({Token.string==~"([Ss]ub[-]?[Ss]ub[-]?[Pp]aragraph(s)?)|([Hh]eads?)"}):match --> :match.partLabel={class="subsubparagraph"}
+Rule: point      ({Token.string==~"[Pp]oint(s)?"}):match -->                         :match.partLabel={class="point"}
+Rule: step       ({Token.string==~"[Ss]tep(s)?"}):match -->                          :match.partLabel={class="step"}
+Rule: part       ({Token.string==~"([Pp]art(s)?)|(PART)"}):match -->                 :match.partLabel={class="part"} // "PART" will never match, as upperLetter will be preferred due to leading space
+Rule: subpart    ({Token.string==~"[Ss]ub(-)?[Pp]art(s)?"}):match -->                :match.partLabel={class="subpart"}
+Rule: table      ({Token.string==~"[Tt]able(s)?"}):match -->                         :match.partLabel={class="table"}
+Rule: item       ({Token.string==~"[Ii]tem(s)?"}):match -->                          :match.partLabel={class="item"}
+
+
+Rule: letterDottedPart
+(
+	({SpaceToken}):space
+	(
+		{Token.string==~"[A-Za-z]+"}
+		({Token.string==~"[0-9]+"})?
+		(
+			{Token.string=="."}
+			({Token.string==~"[A-Za-z0-9]+"})+
+		)+
+	):match
+)
+-->
+:match.letterDottedPart={label=:match@string},
+:space.space={}
+
+Rule: numberDottedPart
+(
+	({SpaceToken}):space
+	(
+		{Token.string==~"[0-9]+"}
+		({Token.string==~"[A-Za-z]+"})?
+		(
+			{Token.string=="."}
+			({Token.string==~"[A-Za-z0-9]+"})+
+		)+
+	):match
+)
+-->
+:match.numberDottedPart={label=:match@string},
+:space.space={}
+
+Rule: brackettedNumber
+( 
+	({SpaceToken})?:space
+	(
+	   {Token.string=="("}
+	   ({Token.string==~"[0-9]+"}
+	    ({Token.string==~"[A-Za-z]+"})?
+	   ):label
+	   {Token.string==")"}   
+	):match
+)
+-->
+:match.brackettedNumber={label=:label@string},
+:space.space={}
+
+/* ambiguity between letters and numerals 
+   - first rule wins - assume we're only going to get small numbers
+*/
+Rule: brackettedLowerRoman
+(
+	({SpaceToken})?:space
+	(
+	   {Token.string=="("}
+	   ({Token.string==~"[ivx]+[a-z]?"}):label
+	   {Token.string==")"}   
+	):match
+)
+-->
+:match.brackettedLowerRoman={label=:label@string},
+:space.space={}
+
+Rule: brackettedRomanNumeral
+(
+	({SpaceToken})?:space 
+	(
+		{Token.string=="("}
+		({Token.string==~"[IVXLCM]+"}):label
+		{Token.string==")"}
+	):match
+)
+-->
+:match.brackettedRomanNumber={label=:label@string},
+:space.space={}
+
+Rule: brackettedLetter
+(
+	({SpaceToken})?:space 
+	(
+	   {Token.string=="("}
+	   ({Token.string==~"[A-Za-z][A-Za-z]?"}
+		({Token.string==~"[0-9]+"})?
+	   ):label
+	   {Token.string==")"}
+	):match
+)
+-->
+:match.brackettedLetter={label=:label@string},
+:space.space={}
+
+
+Rule: romanNumeral
+(
+	({SpaceToken})?:space 
+	(
+	   ({Token.string==~"[IVXLCM]+"})
+	):match
+)
+-->
+//:match.romanNumber={label=:match@string},
+:space.space={},
+:match.upperLetter={label=:match@string},
+{
+   Annotation numberTokenAnn= (Annotation)bindings.get("match").iterator().next();
+   String str= (String)numberTokenAnn.getFeatures().get("string");
+
+   // Convert from Roman numerals
+   int result=0;
+   int lt=str.length();
+   int i=0;
+
+   Map lookup= new TreeMap<Character,Integer>();
+   lookup.put('I',1);
+   lookup.put('V',5);
+   lookup.put('X',10);
+   lookup.put('L',50);
+   lookup.put('C',100);
+   lookup.put('D',500);
+   lookup.put('M',1000);
+
+   while (i<lt) {
+    int val0=(int)lookup.get(str.charAt(i));
+    if (i+1==lt) {
+      // Last character
+      result=result+val0;
+    } else {
+      // Check next char
+      int val1=(int)lookup.get(str.charAt(i+1));
+      if (val0<val1) {
+        // subtractive pair
+        result=result-val0+val1;
+        i=i+1;
+      } else {
+        // additive singleton
+        result=result+val0;
+         }
+      }
+    i=i+1;
+   }
+
+   FeatureMap fm=Factory.newFeatureMap();
+   fm.put("label",Integer.toString(result));
+   
+   // Create Annotation
+   outputAS.add(
+     numberTokenAnn.getStartNode(),
+     numberTokenAnn.getEndNode(),
+     "romanNumber",
+     fm);
+}
+
+Rule: number
+(
+	({SpaceToken})?:space
+	( {Token.string==~"[0-9]+"}
+	    (  {Token.string==~"[A-Za-z]+",!LegTitle}
+	       ({Token.string==~"[0-9]"})? )?
+	):match
+)
+-->
+:match.number={label=:match@string},
+:space.space={}
+
+Rule: upperLetter
+(
+	({SpaceToken})?:space
+	(
+	  ({Token.string==~"[A-Z]{0,5}"})
+	  ({Token.string==~"[0-9]+"})?
+	):match
+)
+-->
+//:match.number={label=:match@string}, // at some point, it seemed like upper letter behaves same as number!
+:match.upperLetter={label=:match@string},
+:space.space={}
+
+Rule: and
+(
+	({SpaceToken})?:space
+	( {Token.string==~"(and)|(or)"} ):match
+)
+-->
+:match.and={},
+:space.space={}
+
+
+Rule: as
+(
+	({SpaceToken})?:space
+	( {Token.string=="as"} ):match
+)
+-->
+:match.as={},
+:space.space={}
+
+
+Rule: to
+(
+	({SpaceToken})?:space
+	({Token.string==~"[-–]|(to)"}):match
+)
+-->
+:match.to={},
+:space.space={}
+
+
+Rule: comma
+(
+	({SpaceToken})?:space
+	({Token.string==~"[,;]"}):match
+)
+-->
+:match.comma={},
+:space.space={}

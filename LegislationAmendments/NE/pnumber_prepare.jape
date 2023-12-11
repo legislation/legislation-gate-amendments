@@ -1,0 +1,40 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: Pnumber_prepare
+Input: Pnumber
+Options: control = appelt
+
+Rule: Level4
+(
+   {Pnumber within {P4}, Pnumber notWithin {BlockAmendment}}
+):match
+-->
+:match.Pnumber={level=4}
+
+Rule: Level3
+(
+   {Pnumber within {P3}, Pnumber notWithin {BlockAmendment}}
+):match
+-->
+:match.Pnumber={level=3}
+
+Rule: Level2
+(
+   {Pnumber within {P2}, Pnumber notWithin {BlockAmendment}}
+):match
+-->
+:match.Pnumber={level=2}
+
+Rule: Level1
+(
+   {Pnumber within {P1}:p1, Pnumber notWithin {BlockAmendment}}
+):match
+-->
+:match.Pnumber={level=1}

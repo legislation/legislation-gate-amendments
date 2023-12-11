@@ -1,0 +1,35 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase:	Footnote_citations
+Input:  Footnote
+Options: control = first
+
+/* For footnotes which contain citations, we get the URI of the citation, and put it in
+a map with the footnote's id as a key.  The footnote map is stored in the featuremap of the document.
+*/
+Rule: Footnote_URI
+({Footnote}):match
+--> 
+{
+  AnnotationSet footnoteAS= (AnnotationSet)bindings.get("match");
+  Annotation footnoteAnn= footnoteAS.iterator().next();
+  String footnoteId= (String)footnoteAnn.getFeatures().get("id");
+  AnnotationSet citationAS= gate.Utils.getContainedAnnotations(inputAS,footnoteAS,"Citation");
+  Map<String,String> footnoteMap= (Map<String,String>)doc.getFeatures().get("footnotes");
+  if(footnoteMap==null) { 
+	footnoteMap= new TreeMap<String,String>();
+	doc.getFeatures().put("footnotes",footnoteMap);
+  }
+  for(Annotation citationAnn : gate.Utils.inDocumentOrder(citationAS)) {
+    String uri= (String)citationAnn.getFeatures().get("URI");
+	if(uri!=null) footnoteMap.put(footnoteId,uri);
+    break;  // Only interested in the first one
+  }
+}

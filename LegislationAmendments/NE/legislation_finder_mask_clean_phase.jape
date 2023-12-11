@@ -1,0 +1,27 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_finder_mask_clean.jape
+* Author:	Paul Appleby
+* Description:	Cleans specific annotations for Finders
+
+* Date created:	15/02/2011
+* This version:	0.1
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+MultiPhase:	FinderMaskClean
+Phases:
+
+legislation_mask_clean

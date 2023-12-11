@@ -1,0 +1,80 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_mask_items_partial_clean_2.jape
+* Author:	Paul Appleby
+* Description:	Mask structures that only have meaningless tokens such as a date without the context
+* Date created:	15/02/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	MaskPartial
+Input:  Token LegP1
+Options: control = appelt
+
+Rule: CleanP1
+(
+	{LegP1}
+):annotation
+-->
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+	AnnotationSet inputFullSet = inputAS.getContained(annotationSet.firstNode().getOffset(), annotationSet.lastNode().getOffset());
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("Location");
+	coveringList.add("LegRef");
+	coveringList.add("Legislation");
+	coveringList.add("Action");
+	coveringList.add("CrossRef");
+	coveringList.add("Quote");
+	coveringList.add("Date");
+	AnnotationSet inputSet = inputFullSet.get(coveringList);
+	Integer locationCount = inputSet.get("Location").size();
+	Integer legrefCount = inputSet.get("LegRef").size();
+	Integer legislationCount = inputSet.get("Legislation").size();
+	Integer actionCount = inputSet.get("Action").size();
+	Integer crossrefCount = inputSet.get("CrossRef").size();
+	Integer quoteCount = inputSet.get("Quote").size();
+	Integer dateCount = inputSet.get("Date").size();
+	Boolean mask = false;
+	
+	if (locationCount == 1 && legrefCount <= 1 && legislationCount == 0
+	 	&& actionCount == 0 && crossrefCount == 0) {
+		mask = true;
+	}	
+	else if (locationCount == 0 && legrefCount == 0 && legislationCount == 0
+	 	&& actionCount == 0 && crossrefCount == 0 && quoteCount == 1 && dateCount == 0){
+	 	mask = true;
+	}
+	else if (locationCount == 0 && legrefCount == 0 && legislationCount == 0
+	 	&& actionCount == 0 && crossrefCount == 0 && quoteCount == 0 && dateCount == 1){
+	 	mask = true;
+	}
+		
+	if (mask) {
+		FeatureMap features = Factory.newFeatureMap();
+		features.put("type", "PartialClean");
+		try {
+			outputAS.add(annotationSet.firstNode(), annotationSet.lastNode(), "Mask", features);				
+		}
+		catch (Exception e) {
+			System.err.println("Partial mask error: " + e.getMessage());
+		}
+	}
+}
+
+

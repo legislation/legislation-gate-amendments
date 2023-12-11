@@ -1,0 +1,121 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_mask_items_3a.jape
+* Author:	Paul Appleby
+* Description:	Annotations for markup from the legislation we want to ignore
+* Date created:	05/04/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	Mask3a
+Input:  LegP1group Mask Sentence LegText
+Options: control = appelt
+
+Rule: Text
+(
+	{LegText contains {Mask.type == "NoInfo"}} |
+	{LegText contains {Mask.type == "Commencement"}} |
+	{LegText contains {Mask.type == "Brackets"}} |
+	{LegText contains {Mask.type == "IsDesignated"}} |
+	{LegText contains {Mask.type == "HasConsented"}} |
+	{LegText contains {Mask.type == "AtCourt"}} |
+	{LegText contains {Mask.type == "MentionedIn"}} |
+	{LegText contains {Mask.type == "AppointedDay"}} |
+	{LegText contains {Mask.type == "Published"}} |
+	{LegText contains ExtendTo}
+):annotation
+-->
+	:annotation.Mask = {type = "TextMask"}
+
+// If the text is within a P2 then mask the entire P2. Very unlikely that effects will start half way through
+Rule: EffectsP2
+Priority: 20
+(
+	{Sentence contains {Mask.type == "EffectText"}, Sentence within LegP2}
+):annotation
+-->
+{
+	// Mask from mention until end of P1group
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation sentenceAnn = annotationSet.iterator().next();
+	Long annStart = sentenceAnn.getStartNode().getOffset();
+	Long annEnd = sentenceAnn.getEndNode().getOffset();
+	AnnotationSet p2Set = inputAS.get("LegP2", annStart, annEnd);
+	Annotation p2Ann = p2Set.iterator().next();
+	Long effectStart = p2Ann.getStartNode().getOffset();
+	Long effectEnd = p2Ann.getEndNode().getOffset();
+	FeatureMap features = Factory.newFeatureMap();
+	features.put("type", "Effect");
+	try {
+		outputAS.add(effectStart, effectEnd, "Mask", features);				
+	}
+	catch (Exception e) {
+		System.err.println("Mask error: " + e.getMessage());
+	}
+}
+
+
+Rule: EffectsP1group
+Priority: 10
+(
+	{Sentence contains {Mask.type == "EffectText"}, Sentence within LegP1group}
+):annotation
+-->
+{
+	// Mask from mention until end of P1group
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation sentenceAnn = annotationSet.iterator().next();
+	Long annStart = sentenceAnn.getStartNode().getOffset();
+	Long annEnd = sentenceAnn.getEndNode().getOffset();
+	AnnotationSet p1Set = inputAS.get("LegP1group", annStart, annEnd);
+	Annotation p1Ann = p1Set.iterator().next();
+	Long p1End = p1Ann.getEndNode().getOffset();
+	FeatureMap features = Factory.newFeatureMap();
+	features.put("type", "Effect");
+	try {
+		outputAS.add(annStart, p1End, "Mask", features);				
+	}
+	catch (Exception e) {
+		System.err.println("Mask error: " + e.getMessage());
+	}
+}
+
+
+Rule: EffectsPblock
+(
+	{Sentence contains {Mask.type == "EffectText"}, Sentence within LegPblock}
+):annotation
+-->
+{
+	// Mask from mention until end of Pblock
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation sentenceAnn = annotationSet.iterator().next();
+	Long annStart = sentenceAnn.getStartNode().getOffset();
+	Long annEnd = sentenceAnn.getEndNode().getOffset();
+	AnnotationSet pSet = inputAS.get("LegPblock", annStart, annEnd);
+	Annotation pAnn = pSet.iterator().next();
+	Long pEnd = pAnn.getEndNode().getOffset();
+	FeatureMap features = Factory.newFeatureMap();
+	features.put("type", "Effect");
+	try {
+		outputAS.add(annStart, pEnd, "Mask", features);				
+	}
+	catch (Exception e) {
+		System.err.println("Mask error: " + e.getMessage());
+	}
+}

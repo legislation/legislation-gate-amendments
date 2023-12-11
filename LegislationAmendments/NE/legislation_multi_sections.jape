@@ -1,0 +1,37 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_multi_sections.jape
+* Author:	Paul Appleby
+* Description:	Annotates the bits of multi-section references
+* Date created:	24/02/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	MultiSections
+Input:  LegRef Token
+Options: control = appelt
+
+
+Rule: Section
+(
+	{LegRef, Token.string =~ "\\ASection"}
+):annotation
+-->
+	:annotation.LegRef = {type = "Section"},
+	:section.LegSection = {}
+

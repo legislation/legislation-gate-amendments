@@ -1,0 +1,55 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_mask_items_5.jape
+* Author:	Paul Appleby
+* Description:	Unmasks bits of text that should be processed but that have so far been masked
+* Date created:	15/02/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	Mask5
+Input:  Mask LongDistanceStructure
+Options: control = appelt
+
+/* Certain structures are handled separately from other long distance stuff so remove the annotation */
+Rule: NotStructure
+Priority: 10
+(
+	{LongDistanceStructure.structure == "CommencementStructure"} |
+	{LongDistanceStructure.structure == "RepealsRevocations"}
+):annotation
+-->
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+	AnnotationSet ldsSet = annotationSet.get("LongDistanceStructure");
+	Annotation annotAnn = ldsSet.iterator().next();
+	outputAS.remove(annotAnn);
+}
+
+
+Rule: UnmaskLDS
+(
+	{LongDistanceStructure, Mask}
+):annotation
+-->
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+	AnnotationSet maskSet = annotationSet.get("Mask");
+	Annotation annotAnn = maskSet.iterator().next();
+	outputAS.remove(annotAnn);
+}

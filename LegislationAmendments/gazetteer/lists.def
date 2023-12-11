@@ -1,0 +1,15 @@
+des_legislation_ukpga.lst:legislation:ukpga
+des_legislation_ukpga_short.lst:legislation:ukpga_short
+des_legislation_asp.lst:legislation:asp
+des_legislation_nia.lst:legislation:nia
+des_legislation_apni.lst:legislation:apni
+des_legislation_mnia.lst:legislation:mnia
+des_legislation_mwa.lst:legislation:mwa
+des_legislation_anaw.lst:legislation:anaw
+des_legislation_ukcm.lst:legislation:ukcm
+des_legislation_ukla.lst:legislation:ukla
+des_legislation_uksi.lst:legislation:uksi
+des_legislation_key.lst:legislation:legislation_type
+des_month.lst:date:month
+des_day.lst:date:dayofweek
+des_dateday.lst:date:day

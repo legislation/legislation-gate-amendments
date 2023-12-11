@@ -1,0 +1,39 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: sections_prepare_2
+Input: LegAmendment LegTitle Quote brackettedPhrase RelatedLegislation ExplanatoryNotes Legislation LegTableBody IrrelevantReference
+Options: control = all
+
+// Where we find block amendments or quotes in input AnnotationSet,
+// remove all contained annotations from output AnnotationSet.
+// Note that the containing and contained annotation are in different AnnotationSets.
+Macro: REMOVE_ALL_WITHIN_MATCH
+:match
+{
+	AnnotationSet anns= (AnnotationSet)bindings.get("match");
+	for( Annotation ann : anns) {
+		AnnotationSet containedAnns= outputAS.getContained(ann.getStartNode().getOffset(),ann.getEndNode().getOffset());
+		for( Annotation containedAnn : containedAnns ) {
+			if(ann!=containedAnn) {
+				outputAS.remove(containedAnn);
+			}
+		}
+	}
+}
+
+Rule: amendment ({LegAmendment}):match --> REMOVE_ALL_WITHIN_MATCH
+Rule: title     ({LegTitle}):match -->     REMOVE_ALL_WITHIN_MATCH
+Rule: quote     ({Quote}):match -->        REMOVE_ALL_WITHIN_MATCH
+Rule: relatedleg       ({RelatedLegislation}):match --> REMOVE_ALL_WITHIN_MATCH
+Rule: brackettedPhrase ({brackettedPhrase}):match --> REMOVE_ALL_WITHIN_MATCH
+Rule: ens ({ExplanatoryNotes}):match --> REMOVE_ALL_WITHIN_MATCH
+Rule: leg ({Legislation}):match --> REMOVE_ALL_WITHIN_MATCH
+Rule: table ({LegTableBody}):match --> REMOVE_ALL_WITHIN_MATCH
+Rule: irrelevantref ({IrrelevantReference}):match --> REMOVE_ALL_WITHIN_MATCH

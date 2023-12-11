@@ -1,0 +1,68 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_legisliation_a.jape
+* Author:	Paul Appleby
+* Description:	Extract other legislation references from text
+* Date created:	15/02/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Legislation2
+Input:  Lookup Token LineBreak TempLegislation
+Options: control = appelt negationGrouping = false
+
+/* All secondary legislation has a minor type of uksi! */
+Rule: SecondaryLegislation
+Priority: 20
+(
+	{Lookup.majorType == legislation, Lookup.minorType == uksi}
+):legis
+-->
+{	
+	AnnotationSet legisSet = bindings.get("legis");
+	Annotation legisAnn = legisSet.iterator().next();	
+
+	FeatureMap features = Factory.newFeatureMap();
+	
+	if (legisAnn.getFeatures().get("context") != null) {
+		String context = legisAnn.getFeatures().get("context").toString();;		
+		features.put("context", context);
+		features.put("rule", "SecondaryLegislation");
+		String type = context.substring(context.indexOf("/id") + 4);
+		type = type.substring(0, type.indexOf("/"));
+		features.put("type", type);
+		outputAS.add(legisSet.firstNode(), legisSet.lastNode(), "Legislation", features);	
+	}	
+}
+
+
+/* Where there are lots of typos the context won't be identified. But mark anyway */
+Rule: SecondaryLegislationNoContext
+Priority: 10
+(
+	{TempLegislation, !Lookup, !TempLegislation contains {Lookup.minorType == "uksi"}, !TempLegislation contains {Lookup.minorType == "ssi"}}
+):legis
+-->
+	:legis.Legislation = {type = "secondary", rule = "NoContext"}
+
+
+Rule: LegislationShort
+Priority: 10
+(
+	{Lookup.majorType == legislation, Lookup.minorType == ukpga_short}
+):legis
+-->
+	:legis.Legislation = {type = "ukpga", context = :legis.Lookup.context}

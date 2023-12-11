@@ -1,0 +1,57 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislatin_final.jape
+* Author:	Paul Appleby
+* Description:	Any final document namespace prefixed
+* Date created:	22/02/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	Final
+Input:  LegRef Action Anaphor Location Legislation Quote Controller LegAmendment Changes Relation SubLocation SubLocationGroup SubLocationRange Date CrossRef Structure ExtendTo ExtentCountries NonTextualPhrase
+Options: control = all
+
+
+Rule: Retag
+(
+	{Changes} |
+	{LegRef} |
+	{Action} |
+	{Anaphor} |
+	{Location} |
+	{SubLocation} |
+	{SubLocationGroup} |
+	{SubLocationRange} |
+	{LegAmendment} |
+	{Legislation} |
+	{Relation} |
+	{Quote} |
+	{Date} |
+	{CrossRef} |
+	{Controller} |
+	{Structure} |
+	{ExtendTo} |
+	{ExtentCountries} |
+	{NonTextualPhrase}
+):annotation
+-->
+{
+	AnnotationSet annotSet = bindings.get("annotation");
+	Annotation singleAnnot = annotSet.iterator().next();
+	outputAS.add(annotSet.firstNode(), annotSet.lastNode(), "gate:" + singleAnnot.getType(), singleAnnot.getFeatures());	
+}

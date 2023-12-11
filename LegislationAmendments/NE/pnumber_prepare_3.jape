@@ -1,0 +1,72 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: Pnumber_prepare_2
+Input: P1 P2 P3 P4 P5 Pnumber
+Options: control = all
+
+Macro: REMOVE_MATCH
+:match
+{
+	AnnotationSet anns= (AnnotationSet)bindings.get("match");
+	for( Annotation ann : anns) {
+		inputAS.remove(ann);
+	}
+}
+
+Rule: P5
+(
+   {P5}
+):match
+-->
+REMOVE_MATCH
+
+Rule: P4
+(
+   {P4}
+):match
+-->
+REMOVE_MATCH
+
+Rule: P3
+(
+   {P3}
+):match
+-->
+REMOVE_MATCH
+
+Rule: P2
+(
+   {P2}
+):match
+-->
+REMOVE_MATCH
+
+Rule: P1
+(
+   {P1}
+):match
+-->
+REMOVE_MATCH
+
+/*
+Rule: PNumber 
+(
+	{LegPnumber,!LegPnumber.level>0}
+):match
+-->
+REMOVE_MATCH
+*/
+
+Rule: PNumber 
+(
+	{Pnumber}
+):match
+-->
+REMOVE_MATCH

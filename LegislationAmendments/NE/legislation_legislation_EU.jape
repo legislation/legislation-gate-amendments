@@ -1,0 +1,201 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase:	LegislationEU
+Input:  Token LegTitle LegRef
+Options: control = appelt
+
+Macro: EU_LEGISLATION
+(
+	(
+		({Token.string==~"(Commission)|(Council)"})?
+		({Token.string==~"(Implementing)|(Delegated)"})?
+		({Token.string==~"Regulations?"})?
+		{Token.string=="("}
+		{Token.string==~"(E[CU])|(EEC)"}
+		{Token.string==")"}
+		({Token.string=="No"}
+			({Token.string=="."})?)?
+		(	({Token.string==~"\\d+"}):num1
+			{Token.string=="/"}
+			({Token.string==~"\\d+"}):num2
+		)
+		(	{Token.string=="of"}
+			{Token.string=="the"}
+			{Token.string=="European"}
+			{Token.string=="Parliament"}
+			(	{Token.string=="and"}
+				{Token.string=="of"}
+				{Token.string=="the"}
+				{Token.string=="Council"})?
+		)?
+	)|
+	(
+		({Token.string==~"(Council)|(Commission)"})?
+		({Token.string==~"Directives?"})?
+		({Token.string==~"\\d{2}\\d{2}?"}):num3
+		{Token.string=="/"}
+		({Token.string==~"\\d+"}):num4
+		{Token.string=="/"}
+		{Token.string==~"(E[CU])|(EEC)"}
+		(	{Token.string=="of"}
+			{Token.string=="the"}
+			{Token.string=="European"}
+			{Token.string=="Parliament"}
+			(	{Token.string=="and"}
+				{Token.string=="of"}
+				{Token.string=="the"}
+				{Token.string=="Council"})?
+		)?
+	)|
+	(
+		({Token.string==~"(Council)|(Commission)"})?
+		({Token.string=="Implementing"})?
+		({Token.string==~"Decisions?"})
+  		( {Token.string=="("}
+		  {Token.string==~"(E[CU])|(EEC)"}
+		  {Token.string==")"} ) ?
+		({Token.string==~"\\d+"}):num5
+		{Token.string=="/"}
+		({Token.string==~"\\d+"}):num6
+		( {Token.string=="/"}
+		  {Token.string==~"(E[CU])|(EEC)"} )?
+		(	{Token.string=="of"}
+			{Token.string=="the"}
+			{Token.string=="European"}
+			{Token.string=="Parliament"}
+			(	{Token.string=="and"}
+				{Token.string=="of"}
+				{Token.string=="the"}
+				{Token.string=="Council"})?
+		)?
+	)
+)
+
+Rule: Title
+({LegTitle})--> {}
+
+Rule: LegislationEU
+(EU_LEGISLATION):legislation
+-->
+{
+   // This is all necessary because the citation format may be any of:
+   //   yyyy/n+ 
+   //   yy/n+
+   //   n+/yyyy
+   //   n+/yy
+   AnnotationSet legAS= (AnnotationSet)bindings.get("legislation");
+   AnnotationSet num1AS= (AnnotationSet)bindings.get("num1");
+   AnnotationSet num2AS= (AnnotationSet)bindings.get("num2");
+   AnnotationSet num3AS= (AnnotationSet)bindings.get("num3");
+   AnnotationSet num4AS= (AnnotationSet)bindings.get("num4");
+   AnnotationSet num5AS= (AnnotationSet)bindings.get("num5");
+   AnnotationSet num6AS= (AnnotationSet)bindings.get("num6");
+   String type="eur";
+   if(num1AS==null) {
+      if(num3AS!=null) {
+		 num1AS= num3AS;
+		 num2AS= num4AS;
+		 type="eudr";
+      } else {
+		num1AS= num5AS;
+		num2AS= num6AS;
+		type="eudn";
+	  }
+   }
+   String num1Str= gate.Utils.cleanStringFor(doc,num1AS);
+   String num2Str= gate.Utils.cleanStringFor(doc,num2AS);
+   int num1= Integer.parseInt(num1Str);
+   int num2= Integer.parseInt(num2Str);
+   boolean num1PossYear= ((num1>1960)&&(num1<2020))||((num1>60)&&(num1<99));
+   boolean num2PossYear= ((num2>1960)&&(num2<2020))||((num2>60)&&(num2<99));
+   int year=0;
+   int number=0;
+   if(num1PossYear&&num2PossYear) {
+	if((num1>99)&&(num2>99)) {
+		year=num1;
+		number=num2;
+	} else if(num2>99) {
+		year=num2;
+		number=num1;
+	} else {
+		year=num1;
+		number=num2;
+	}
+   } else if(num2PossYear) {
+	year=num2;
+	number=num1;
+   } else {
+	year=num1;
+	number=num2;
+   }
+   if(year<100) year+=1900;
+   String context="http://www.legislation.gov.uk/id/"+type+"/"+Integer.toString(year)+"/"+Integer.toString(number);
+   FeatureMap fm= Factory.newFeatureMap();
+   fm.put("type","eu");
+   fm.put("year",year);
+   fm.put("number",number);
+   fm.put("context",context);
+   outputAS.add(legAS.firstNode(), legAS.lastNode(), "Legislation", fm);   
+}
+
+/*  This is necessary because the amended legislation is often followed by mentions
+    of other related legislation, which we need to ignore 
+*/
+Rule: RelatedLegislationEU
+(
+	(
+		(
+			(	{Token.string=="laying"}
+				{Token.string=="down"}
+				({Token.string=="detailed"})?
+				{Token.string=="rules"})?
+			{Token.string=="for"}
+			{Token.string=="the"}
+			{Token.string=="implementation"}
+			{Token.string=="of"}
+		) |
+		(
+			{Token.string==~"p[eu]rsuant"}
+			{Token.string=="to"}
+		) |
+		(
+			{Token.string=="referred"}
+			{Token.string=="to"}
+			{Token.string=="in"}
+		) |
+		(
+			{Token.string=="in"}
+			{Token.string=="application"}
+			{Token.string=="of"}
+		) |
+		({Token.string=="repealing"}) |
+		({Token.string=="amending"}) |
+		({Token.string=="implementing"}) |
+		({Token.string=="supplementing"}) |
+		({Token.string=="under"}) |
+		({Token.string=="and"}) |
+		({Token.string==","})
+	):phrase
+	(
+		({LegRef} {Token.string=="of"})*
+		(EU_LEGISLATION)
+	):legislation
+)
+-->
+:phrase.LinkingPhrase={},
+:legislation.RelatedLegislation={}
+
+Rule: EEA-agreement
+(
+	{Token.string=="EEA"}
+	{Token.string==~"[Aa]greement"}
+):match
+-->
+:match.Legislation={context="http://www.legislation.gov.uk/id/eut/eea-agreement"}

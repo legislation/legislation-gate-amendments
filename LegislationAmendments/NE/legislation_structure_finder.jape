@@ -1,0 +1,40 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_structure_finder.jape
+* Author:	Paul Appleby
+* Description:	Find content that we want the parser to process
+* Date created:	22/06/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+MultiPhase:  StructureFinder
+Phases:
+
+legislation_find_structure_phrases
+legislation_find_structure_phrases_2
+legislation_find_structure_phrases_3
+legislation_find_structure_phrases_4
+legislation_find_structure_phrases_5
+
+legislation_large_structure_finder
+legislation_long_distance_finder
+
+//legislation_commencement_phrases
+
+legislation_clean_structure_phrases
+

@@ -1,0 +1,62 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_errors.jape
+* Author:		Paul Appleby
+* Description:	Try and clean up obvious mark-up issues in XML or content
+* Date created:	28/03/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Errors
+Input:  Action LegPnumber LegAmendment Location Quote Legislation LegRef Date
+Options: control = appelt
+
+Rule: RemovePnumber
+(
+	{Action}
+	({LegPnumber}):annotation
+	{LegAmendment}
+)
+-->
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+ 	outputAS.removeAll(annotationSet);
+}
+
+/* The only thing insert is followed by is amendments */
+Rule: RemoveAction
+(
+	({Action.type == "Insert"}):annotation
+	{LegPnumber}
+	{Location}
+)
+-->
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+ 	outputAS.removeAll(annotationSet);
+}
+
+// Remove random data that are littered about
+Rule: RemoveDate
+(
+	{LegPnumber}
+	({Date})+:annotation
+)
+-->
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+ 	outputAS.removeAll(annotationSet);
+}

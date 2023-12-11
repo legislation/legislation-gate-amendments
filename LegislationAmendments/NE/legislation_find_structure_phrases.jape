@@ -1,0 +1,410 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_find_structure_phrases.jape
+* Author:	Paul Appleby
+* Description:	Find content that we want the parser to process for NTSitems. This is basically looking for key phrases to select possible NTS candidates that are then parsed by a later stage to check if they are vaild NTS items
+* Date created:	22/06/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	FindNTS
+Input:  Sentence Token Mask LegAmendment LegEnactingText Quote LegPrelims LegMetadata LegRef Legislation
+Options: control = appelt
+
+Rule: AvoidTransfer
+(
+	{LegAmendment} |
+	{Quote} |
+	{LegEnactingText} |
+	{LegPrelims} |
+	{LegMetadata} |
+	{Mask.type == "Notes"} |
+	{Mask.type == "EarlierOrders"} |
+	{Mask.type == "Footnotes"} |
+	{Mask.type == "Text"} |
+	{Mask.type == "Signature"}
+)
+-->{}
+
+
+Rule: NTS
+(
+	(
+		(
+			{Token.string == "shall"} |
+			(
+				{Token.string == "is"}
+				{Token.string == "to"}
+			)
+		)
+		(
+			(
+				(
+					(
+						{Token.string == "be"}
+						{Token.string == "read"}		
+					) |
+					(
+						(
+							{Token.string == "also"} |
+							{Token.string == "not"}
+						)?
+						{Token.string == "apply"}
+					)
+				)
+				(
+					(
+						{Token.string == "as"}
+						{Token.string == "if"}
+					) |
+					(
+						{Token.string == "instead"}
+						{Token.string == "of"}
+					) |
+					(
+						{Token.string == "in"}
+						{Token.string == "relation"}
+						{Token.string == "to"}
+					) |
+					{Token.string == "to"} |
+					{Token.string == "upon"}
+				)
+			) |
+			(
+				{Token.string == "be"}
+				{Token.string == "determined"}
+			) |
+			(
+				{Token.string == "be"}
+				{Token.string == "treated"}
+				{Token.string == "as"}
+			) |
+			(
+				{Token.string == "have"}
+				{Token.string == "effect"}
+			)
+		)
+	) |
+	(
+		{Token.string == "is"}
+		{Token.string == "treated"}
+		{Token.string == "as"}
+	) |
+	(
+		{Token.string == "to"}
+		{Token.string == "be"}
+		{Token.string == "determined"}		
+	) |
+	(
+		{Token.string == "In"}
+		{Token.string == "relation"}
+		{Token.string == "to"}
+	) |
+	(
+		{Token.string == "would"}
+		{Token.string == "have"}
+		{Token.string == "applied"}
+	) |
+	(
+		{Token.root == "for"}
+		{Token.string == "all"}
+		{Token.string == "purposes"}
+	) |
+	(
+		{Token.root == "for"}
+		{Token.string == "the"}
+		{Token.string == "purposes"}
+	) |
+	(
+		{Token.root == "have"}
+		{Token.string == "effect"}
+		{Token.string == "as"}
+		{Token.string == "if"}
+	) |
+	(
+		{Token.root == "have"}
+		{Token.string == "effect"}
+		{Token.string == "for"}
+	) |
+	(
+		{Legislation}
+		{Token.string == "applies"}
+	)	
+):annotation
+-->	
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet coveringSet = inputAS.getCovering("Sentence", legStart, legEnd);
+	Annotation coveringAnn = coveringSet.iterator().next();
+	FeatureMap featuresStructure = Factory.newFeatureMap();
+	FeatureMap featuresPhrase = Factory.newFeatureMap();
+	featuresPhrase.put("type", "General");
+	try {
+		outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "NonTextualStructure", featuresStructure);				
+		outputAS.add(annotationSet.firstNode(), annotationSet.lastNode(), "NonTextualPhrase", featuresPhrase);				
+	}
+	catch (Exception e) {
+		System.err.println("Non textual error: " + e.getMessage());
+	}
+}
+
+
+Rule: NTSapplied
+(
+	(
+		(
+			{Token.string == "apply"} |
+			(
+				{Token.string == "applies"}
+				{Token.string == "with"}
+				{Token.string == "respect"}
+			)		)
+		{Token.string == "to"}
+		({Token, Token.string != "."})[1,10]
+		{Token.string == "as"}
+		{Token.string == "if"}
+	) |
+	(
+		{Token.string == "are"}
+		{Token.string == "to"}
+		{Token.string == "be"}		
+		{Token.string == "applied"}
+	) |
+	(
+		{Token.string == "applies"}
+		{Token.string == "to"}
+	) |
+	(
+		{Token.string == "applies"}
+		{Token.string == "for"}
+	) |
+	(
+		{Token.root == "apply"}
+		{Token.string == "as"}
+		{Token.string == "if"}
+	) |
+	(
+		{Token.string == "as"}
+		{Token.string == "applied"}
+		(
+			{Token.string == "by"} |
+			{Token.string == "to"}
+		)
+	) |
+	(
+		{Token.string == "as"}
+		{Token.string == "applying"}
+		{Token.string == "to"}
+	) |
+	(
+		{Token.root == "apply"}
+		(
+			{Token.string == "with"}
+			{Token.string == "respect"}
+		)?
+		{Token.string == "to"}
+	) |
+	(
+		{Token.root == "apply"}
+		{Token.string == "separately"}
+	) |
+	(
+		{Token.string == "apply"}
+		{Token.string == "where"}
+	) |
+	(
+		(
+			{Token.string == "apply"} |
+			{Token.string == "applies"}
+		)
+		({Token.string == "only"})?
+		{Token.string == "in"}
+		{Token.string == "relation"}
+		{Token.string == "to"}
+	)
+):annotation
+-->	
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet coveringSet = inputAS.getCovering("Sentence", legStart, legEnd);
+	Annotation coveringAnn = coveringSet.iterator().next();
+	FeatureMap featuresStructure = Factory.newFeatureMap();
+	FeatureMap featuresPhrase = Factory.newFeatureMap();
+	featuresPhrase.put("type", "Applied");
+	try {
+		outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "NonTextualStructure", featuresStructure);				
+		outputAS.add(annotationSet.firstNode(), annotationSet.lastNode(), "NonTextualPhrase", featuresPhrase);				
+	}
+	catch (Exception e) {
+		System.err.println("Non textual with modifications error: " + e.getMessage());
+	}
+}
+
+
+Rule: NTSexcluded
+(
+	(
+		(
+			{Token.string == "does"} |
+			{Token.string == "shall"}
+		)
+		{Token.string == "not"}
+		{Token.string == "apply"}		
+	)
+):annotation
+-->	
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet coveringSet = inputAS.getCovering("Sentence", legStart, legEnd);
+	Annotation coveringAnn = coveringSet.iterator().next();
+	FeatureMap featuresStructure = Factory.newFeatureMap();
+	FeatureMap featuresPhrase = Factory.newFeatureMap();
+	featuresPhrase.put("type", "Excluded");
+	try {
+		outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "NonTextualStructure", featuresStructure);				
+		outputAS.add(annotationSet.firstNode(), annotationSet.lastNode(), "NonTextualPhrase", featuresPhrase);				
+	}
+	catch (Exception e) {
+		System.err.println("Non textual with exclusion error: " + e.getMessage());
+	}
+}
+
+
+Rule: NTSwithModifications
+(
+	(
+		({Token.root == "apply"})?
+		{Token.string == "with"}
+		({Token.string == "any"})?
+		{Token.string == "necessary"}
+		{Token.string == "modifications"}
+	)
+):annotation
+-->	
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet coveringSet = inputAS.getCovering("Sentence", legStart, legEnd);
+	Annotation coveringAnn = coveringSet.iterator().next();
+	FeatureMap featuresStructure = Factory.newFeatureMap();
+	FeatureMap featuresPhrase = Factory.newFeatureMap();
+	featuresPhrase.put("type", "WithModifications");
+	try {
+		outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "NonTextualStructure", featuresStructure);				
+		outputAS.add(annotationSet.firstNode(), annotationSet.lastNode(), "NonTextualPhrase", featuresPhrase);				
+	}
+	catch (Exception e) {
+		System.err.println("Non textual with modifications error: " + e.getMessage());
+	}
+}
+
+
+/* Certain phrases indicate we need to consume more content */
+Rule: InForce
+(
+	{Token.root == "apply"}
+	(
+		{Token.string == "with"}
+		{Token.string == "respect"}
+	)?
+	{Token.string == "to"}
+	{Token.string == "\u2014"}
+):annotation
+-->	
+{
+	HashSet<String> coveringList = new HashSet<String>();
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	FeatureMap featuresPhrase = Factory.newFeatureMap();
+	featuresPhrase.put("type", "Applied");
+	try {
+		outputAS.add(annotationSet.firstNode(), annotationSet.lastNode(), "NonTextualPhrase", featuresPhrase);				
+	}
+	catch (Exception e) {
+		System.err.println("Non textual with modifications error: " + e.getMessage());
+	}
+	AnnotationSet coveringSet = inputAS.getCovering("", legStart, legEnd);
+	AnnotationSet p2Set = coveringSet.get("LegP2");
+	if (p2Set.size() > 0) {
+		Annotation coveringAnn = p2Set.iterator().next();
+		FeatureMap features = Factory.newFeatureMap();
+		features.put("type", "P2");
+		try {
+			outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "NonTextualStructure", features);				
+		}
+		catch (Exception e) {
+			System.err.println("Non textual error: " + e.getMessage());
+		}
+	}
+	else {
+		AnnotationSet p1Set = coveringSet.get("LegP1");
+		if (p1Set.size() > 0) {
+			Annotation coveringAnn = p1Set.iterator().next();
+			FeatureMap features = Factory.newFeatureMap();
+			features.put("type", "P1");
+			try {
+				outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "NonTextualStructure", features);				
+			}
+			catch (Exception e) {
+				System.err.println("Non textual error: " + e.getMessage());
+			}
+		}
+		else {
+			AnnotationSet pSet = coveringSet.get("LegP");
+			if (pSet.size() > 0) {
+				Annotation coveringAnn = pSet.iterator().next();
+				FeatureMap features = Factory.newFeatureMap();
+				features.put("type", "P");
+				try {
+					outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "NonTextualStructure", features);				
+				}
+				catch (Exception e) {
+					System.err.println("Non textual error: " + e.getMessage());
+				}
+			}
+			else {
+				AnnotationSet p1groupSet = coveringSet.get("LegP1group");
+				if (p1groupSet.size() > 0) {
+					Annotation coveringAnn = p1groupSet.iterator().next();
+					FeatureMap features = Factory.newFeatureMap();
+					features.put("type", "P1group");
+					try {
+						outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "NonTextualStructure", features);				
+					}
+					catch (Exception e) {
+						System.err.println("Non textual error: " + e.getMessage());
+					}
+				}
+			}
+		}
+	}
+}

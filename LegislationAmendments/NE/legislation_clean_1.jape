@@ -1,0 +1,327 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_clean_1.jape
+* Author:	Paul Appleby
+* Description:	Clean up annotations. This is mainly to remove annotations nested inside others in situations that we don't care about
+* Date created:	15/02/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Clean
+Input:  Legislation Quote Location Relation Mask LegAmendment Action OtherRef Anaphor LegRoyalPresence NonTextualStructure CommencementStructure EnablingPowerStructure RepealsRevocations LongDistanceCommencementStructure ExtentStructure NonTextualPhrase
+Options: control = all
+
+Rule: RemoveInXXX
+(
+	{Quote} |
+	{Relation}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("LegRef");
+	coveringList.add("OtherRef");
+	coveringList.add("LegPnumber");
+	coveringList.add("LegConjunction");
+	coveringList.add("StopConjunction");
+	coveringList.add("Legislation");
+	coveringList.add("Interpretation");
+	coveringList.add("Action");
+	coveringList.add("Anaphor");
+	coveringList.add("Location");
+	coveringList.add("Provisions");
+	coveringList.add("Date");
+	coveringList.add("CrossRef");
+	coveringList.add("NonTextualPhrase");
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = inputAS.getContained(legStart, legEnd);
+	AnnotationSet removeSet = nestedSet.get(coveringList);
+ 	outputAS.removeAll(removeSet);
+}
+
+
+Rule: RemoveInAnaphor
+(
+	{Anaphor}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("LegRef");
+	coveringList.add("OtherRef");
+	coveringList.add("LegPnumber");
+	coveringList.add("LegConjunction");
+	coveringList.add("StopConjunction");
+	coveringList.add("Legislation");
+	coveringList.add("Interpretation");
+	coveringList.add("Action");
+	coveringList.add("Location");
+	coveringList.add("Provisions");
+	coveringList.add("Date");
+	coveringList.add("CrossRef");
+	coveringList.add("NonTextualPhrase");
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = inputAS.getContained(legStart, legEnd);
+	AnnotationSet removeSet = nestedSet.get(coveringList);
+ 	outputAS.removeAll(removeSet);
+}
+
+
+Rule: RemoveInYYY
+(
+	{Location}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("LegRef");
+	coveringList.add("OtherRef");
+	coveringList.add("LegPnumber");
+	coveringList.add("LegConjunction");
+	coveringList.add("StopConjunction");
+	coveringList.add("Legislation");
+	coveringList.add("Interpretation");
+	coveringList.add("Action");
+	coveringList.add("Anaphor");
+	coveringList.add("Quote");
+	coveringList.add("Relation");
+	coveringList.add("Provisions");
+	coveringList.add("Date");
+	coveringList.add("CrossRef");
+	coveringList.add("NonTextualPhrase");
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = inputAS.getContained(legStart, legEnd);
+	AnnotationSet removeSet = nestedSet.get(coveringList);
+ 	outputAS.removeAll(removeSet);
+}
+
+// Remove all annotations inside a mask or structure. By this point structure items have been processed to remove everything in them
+Rule: RemoveInMaskStructure
+(
+	{Mask} | 
+	{NonTextualStructure} |
+	{ExtentStructure} |
+	{CommencementStructure} |
+	{EnablingPowerStructure} |
+	{RepealsRevocations} |
+	{LongDistanceCommencementStructure}
+):annotation
+-->
+:annotation.Scoured={},
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("LegRef");
+	coveringList.add("LegBodyBlock");
+	coveringList.add("LegScheduleBlock");
+	coveringList.add("OtherRef");
+	coveringList.add("LegPnumber");
+	coveringList.add("LegConjunction");
+	coveringList.add("StopConjunction");
+	coveringList.add("Legislation");
+	coveringList.add("Interpretation");
+	coveringList.add("Action");
+	coveringList.add("Anaphor");
+	coveringList.add("Location");
+	coveringList.add("Quote");
+	coveringList.add("Relation");
+	coveringList.add("LegAmendment");
+	coveringList.add("Provisions");
+	coveringList.add("ExtendTo");
+	coveringList.add("ExtentCountries");
+	coveringList.add("SubLocation");
+	coveringList.add("SubLocationGroup");
+	coveringList.add("SubLocationRange");
+	coveringList.add("Date");
+	coveringList.add("CrossRef");
+	coveringList.add("Chronology");
+	coveringList.add("NonTextualPhrase");
+
+	List annList = new ArrayList((AnnotationSet)bindings.get("annotation"));
+	Collections.sort(annList, new OffsetComparator());
+	for(int i = 0; i < annList.size(); i++)
+	{
+		Annotation maskAnn = (Annotation)annList.get(i);
+		Long maskStart = maskAnn.getStartNode().getOffset();
+		Long maskEnd = maskAnn.getEndNode().getOffset();
+		AnnotationSet inputSet = inputAS.getContained(maskStart, maskEnd);
+		AnnotationSet removeSet = inputSet.get(coveringList);
+		inputAS.removeAll(removeSet);
+	}
+
+	/*
+	AnnotationSet annotationSet = bindings.get("annotation");	
+	Annotation maskAnn = annotationSet.iterator().next();
+	Long maskStart = maskAnn.getStartNode().getOffset();
+	Long maskEnd = maskAnn.getEndNode().getOffset();
+	
+	AnnotationSet inputSet = inputAS.getContained(maskStart, maskEnd);
+	AnnotationSet removeSet = inputSet.get(coveringList);
+	
+	outputAS.removeAll(removeSet);
+	*/
+}
+
+
+Rule: RemoveInAmendment
+(
+	{LegAmendment}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("LegRef");
+	coveringList.add("LegBodyBlock");
+	coveringList.add("LegScheduleBlock");
+	coveringList.add("OtherRef");
+	coveringList.add("LegPnumber");
+	coveringList.add("LegConjunction");
+	coveringList.add("StopConjunction");
+	coveringList.add("Legislation");
+	coveringList.add("Interpretation");
+	coveringList.add("Action");
+	coveringList.add("Anaphor");
+	coveringList.add("Location");
+	coveringList.add("Quote");
+	coveringList.add("Relation");
+	coveringList.add("Provisions");
+	coveringList.add("Date");
+	coveringList.add("CrossRef");
+	coveringList.add("SubLocation");
+	coveringList.add("SubLocationGroup");
+	coveringList.add("SubLocationRange");
+	coveringList.add("NonTextualPhrase");
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = inputAS.getContained(legStart, legEnd);
+	AnnotationSet removeSet = nestedSet.get(coveringList);
+ 	outputAS.removeAll(removeSet);
+
+	nestedSet = inputAS.getContained(legStart, legEnd - 1);
+	AnnotationSet nestedAmendmentSet = nestedSet.get("LegAmendment");
+ 	outputAS.removeAll(nestedAmendmentSet);
+
+}
+
+
+Rule: RemoveInOtherRef
+(
+	{OtherRef}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("LegRef");
+	coveringList.add("LegConjunction");
+	coveringList.add("StopConjunction");
+	coveringList.add("Anaphor");
+	coveringList.add("Date");
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = inputAS.getContained(legStart, legEnd);
+	AnnotationSet removeSet = nestedSet.get(coveringList);
+ 	outputAS.removeAll(removeSet);
+
+}
+
+Rule: RemoveInAction
+(
+	{Action}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("LegRef");
+	coveringList.add("Location");
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = inputAS.getContained(legStart, legEnd);
+	AnnotationSet removeSet = nestedSet.get(coveringList);
+ 	outputAS.removeAll(removeSet);
+}
+
+Rule: RemoveInRP
+(
+	{LegRoyalPresence}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("LegRef");
+	coveringList.add("OtherRef");
+	coveringList.add("LegPnumber");
+	coveringList.add("LegConjunction");
+	coveringList.add("StopConjunction");
+	coveringList.add("Legislation");
+	coveringList.add("Interpretation");
+	coveringList.add("Action");
+	coveringList.add("Anaphor");
+	coveringList.add("Location");
+	coveringList.add("Provisions");
+	coveringList.add("Date");
+	coveringList.add("CrossRef");
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = inputAS.getContained(legStart, legEnd);
+	AnnotationSet removeSet = nestedSet.get(coveringList);
+ 	outputAS.removeAll(removeSet);
+}
+
+Rule: RemoveNestedLegislation
+(
+	{Legislation}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("Date");
+	coveringList.add("Legislation");
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = inputAS.getContained(legStart, legEnd - 1);
+	AnnotationSet nestedLegislationSet = nestedSet.get(coveringList);
+ 	outputAS.removeAll(nestedLegislationSet);
+	nestedSet = inputAS.getContained(legStart + 1, legEnd);
+	nestedLegislationSet = nestedSet.get(coveringList);
+ 	outputAS.removeAll(nestedLegislationSet);
+}
+

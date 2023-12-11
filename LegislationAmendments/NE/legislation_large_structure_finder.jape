@@ -1,0 +1,111 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_large_structure_finder.jape
+* Author:	Paul Appleby
+* Description:	Find containers for structure items where we need the container for context
+* Date created:	13/10/2011
+* This version:	0.1
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	LargeStructureFinder
+Input:  Token Location LegRef Action  ExtentStructure LegPnumber NonTextualStructure
+Options: control = appelt
+
+Rule: GetStructure
+(
+	{Location.type == "In"}
+	{LegRef}
+	{Token.string == "\u2014"}
+	({ExtentStructure contains {LegPnumber.type == "Sublevel"}})+
+):annotation
+-->
+	:annotation.ExtentStructure = {}
+	
+/* Under certain cirumstances a NTS will be the lead in paragraph on a structure such as an P!
+Where it is and that paragraph ends in an emdash that indicate the lower structures are also part of the NTS */
+Rule: GetLowerStructure
+(
+	({NonTextualStructure})
+):annotation
+-->
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation ntsAnn = annotationSet.iterator().next();
+	String ntsType = "";
+	if (ntsAnn.getFeatures().get("type") != null) ntsType = ntsAnn.getFeatures().get("type").toString();
+	String annText = gate.Utils.stringFor(doc, annotationSet);
+	if (annText.endsWith("\u2014")) {
+		Annotation legAnn = annotationSet.iterator().next();
+		Long legStart = legAnn.getStartNode().getOffset();
+		Long legEnd = legAnn.getEndNode().getOffset();
+		AnnotationSet coveringSet = inputAS.getCovering("", legStart, legEnd);
+		AnnotationSet p2Set = coveringSet.get("LegP2");
+		if (p2Set.size() > 0) {
+			Annotation coveringAnn = p2Set.iterator().next();
+			FeatureMap features = Factory.newFeatureMap();
+			features.put("type", ntsType);
+			try {
+				outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "NonTextualStructure", features);				
+			}
+			catch (Exception e) {
+				System.err.println("NonTextualStructure error: " + e.getMessage());
+			}
+		}
+		else {
+			AnnotationSet p1Set = coveringSet.get("LegP1");
+			if (p1Set.size() > 0) {
+				Annotation coveringAnn = p1Set.iterator().next();
+				FeatureMap features = Factory.newFeatureMap();
+				features.put("type", ntsType);
+				try {
+					outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "NonTextualStructure", features);				
+				}
+				catch (Exception e) {
+					System.err.println("NonTextualStructure error: " + e.getMessage());
+				}
+			}
+			else {
+				AnnotationSet pSet = coveringSet.get("LegP");
+				if (pSet.size() > 0) {
+					Annotation coveringAnn = pSet.iterator().next();
+					FeatureMap features = Factory.newFeatureMap();
+					features.put("type", ntsType);
+					try {
+						outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "NonTextualStructure", features);				
+					}
+					catch (Exception e) {
+						System.err.println("NonTextualStructure error: " + e.getMessage());
+					}
+				}
+				else {
+					AnnotationSet p1groupSet = coveringSet.get("LegP1group");
+					if (p1groupSet.size() > 0) {
+						Annotation coveringAnn = p1groupSet.iterator().next();
+						FeatureMap features = Factory.newFeatureMap();
+						features.put("type", ntsType);
+						try {
+							outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "NonTextualStructure", features);				
+						}
+						catch (Exception e) {
+							System.err.println("NonTextualStructure error: " + e.getMessage());
+						}
+					}
+				}
+			}
+		}
+	}
+}

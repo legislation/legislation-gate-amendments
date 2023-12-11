@@ -1,0 +1,239 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_amendment_related.jape
+* Author:	Paul Appleby
+* Description:	Identify location of amendment on legislation that are in the related form
+* Date created:	15/02/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Related
+Input:  Token LineBreak LegRef Quote Legislation Action LegPnumber Mask Anaphor StopConjunction CrossRef LegTableCell QuotePrewords LegText Location
+Options: control = appelt
+
+Macro: POSITION
+(
+	{Token.string == "first"} |
+	{Token.string == "second"} |
+	{Token.string == "third"}
+)
+
+
+Rule: EntryFor
+(
+	(
+		(
+			{Token.root == "the"}
+			(POSITION):position
+		)?
+		{Token.root == "entry"}
+		(
+			{Token.root == "for"} |
+			{Token.string == "beginning"} |
+			{Token.string == "headed"}
+		)?
+	):for
+	(
+		{Quote} |
+		{LegRef}
+	)
+)
+-->
+	:for.Location = {type = "EntryFor", position = :position.Token.string}
+
+
+Rule: EndOfEntryForRef
+(
+	(
+		{Token.string == "end"}
+		{Token.string == "of"}
+		{Token.string == "the"}
+		{Token.string == "entry"}
+		{Token.string == "for"}
+	):entry
+	{LegRef}
+)
+-->
+	:entry.Location = {type = "AfterEntryForRef"}
+	
+	
+Rule: BeforeEntryForRef
+(
+	(
+		{Token.string == "before"}
+		{Token.string == "the"}
+		{Token.string == "entry"}
+		{Token.string == "for"}
+	):entry
+	{LegRef}
+)
+-->
+	:entry.Location = {type = "BeforeEntryForRef"}
+
+
+Rule: AfterEntry
+(
+	(
+		{Token.root == "after"}
+		{Token.root == "the"}
+		{Token.root == "entry"}
+		{Token.root == "for"}
+	):for
+	{Quote}
+)
+-->
+	:for.Location = {type = "AfterEntryFor"}
+
+
+
+Rule: RelatedEntry
+(
+	(
+		{Token.string == "the"}
+		(
+			{Token.string == "entry"} |
+			{Token.string == "entries"}
+		)
+		(
+			(
+				(
+					{Token.string == "related"} |
+					{Token.string == "relating"}
+				)
+				{Token.string == "to"}
+			) |
+			{Token.string == "for"}
+		)
+	):entry
+	(
+		{!Action, !Mask, !Quote, !LegPnumber, !StopConjunction, !Anaphor, !LegTableCell, !QuotePrewords, !LegText, Token.string != "\u2014"} |
+		{Anaphor.type == "Legislation"}
+	)[1,30]:relation
+)
+-->
+	:entry.Location = {type = "RelatedEntry"},
+	:relation.Relation = {}
+
+
+Rule: RelatedEntryWithRef
+(
+	{LegRef}
+	(
+		(
+			{Token.string == "related"} |
+			{Token.string == "relating"}
+		)
+		{Token.string == "to"}
+	)
+	(
+		{!Action, !Mask, !Quote, !LegPnumber, !StopConjunction, !Anaphor, !LegTableCell, !QuotePrewords, !LegText, Token.string != "\u2014"} |
+		{Anaphor.type == "Legislation"}
+	)[1,30]:relation
+)
+-->
+	:relation.Relation = {}
+
+
+/* Need this to have priority over RelatedEntry */
+Rule: RelatedEntryQuote
+Priority: 10
+(
+	(
+		{Token.string == "the"}
+		(
+			{Token.string == "entry"} |
+			{Token.string == "entries"}
+		)
+		(
+			{Token.string == "related"} |
+			{Token.string == "relating"}
+		)
+		{Token.string == "to"}
+	):entry
+	{Quote}
+)
+-->
+	:entry.Location = {type = "RelatedEntry"}
+
+
+Rule: AfterRelatedEntry
+(
+	(
+		{Token.string == "after"}
+		{Token.string == "the"}
+		{Token.string == "entry"}
+		(
+			(
+				(
+					{Token.string == "related"} |
+					{Token.string == "relating"}
+				)
+				{Token.string == "to"}
+			) |
+			(
+				{Token.string == "for"}
+			)
+		)
+	):entry
+	(
+		{!Action, !Mask, !Quote, !LegPnumber, !StopConjunction, !Anaphor, !LegTableCell, !QuotePrewords, !LegText, Token.string != "\u2014"} |
+		{Anaphor.type == "Legislation"}
+	)[1,30]:relation
+	(
+		{Action} |
+		{StopConjunction}
+	)
+)
+-->
+	:entry.Location = {type = "AfterRelatedEntry"},
+	:relation.Relation = {}
+
+
+Rule: BeforeRelatedEntry
+(
+	(
+		(
+			{Token.string == "before"} |
+			{Token.string == "above"}
+		)
+		{Token.string == "the"}
+		{Token.string == "entry"}
+		(
+			(
+				(
+					{Token.string == "related"} |
+					{Token.string == "relating"}
+				)
+				{Token.string == "to"}
+			) |
+			(
+				{Token.string == "for"}
+			)
+		)
+	):entry
+	(
+		{!Action, !Mask, !Quote, !LegPnumber, !StopConjunction, !Anaphor, !LegTableCell, !QuotePrewords, !LegText, Token.string != "\u2014"} |
+		{Anaphor.type == "Legislation"}
+	)[1,30]:relation
+	(
+		{Action} |
+		{StopConjunction}
+	)
+)
+-->
+	:entry.Location = {type = "BeforeRelatedEntry"},
+	:relation.Relation = {}
+

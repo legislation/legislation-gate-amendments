@@ -1,0 +1,511 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_actions.jape
+* Author:	Paul Appleby
+* Description:	Identify 'actions' on legislation
+* Date created:	15/02/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Actions
+Input:  Token LegRef Quote LegAmendment Anaphor Parens Legislation Action
+Options: control = appelt
+
+Rule: AvoidAction
+(
+	{Parens}
+)
+-->{}
+
+
+Rule: Add
+(
+	(
+		{Token.string == "add"}
+	):action
+	(
+		{Token.string == "\u2013"} |
+		{Token.string == "\u2013\u2013"} |
+		{Token.string == "\u2014"} |
+		{Token.string == "--"} |
+		{Token.string == "-"} |
+		(
+			{Token.string == "the"}
+			{Token.string == "following"}
+		)
+	)
+)
+-->
+	:action.Action = {type = "Insert"}
+
+Rule: AddAs
+(
+	(
+		{Token.string == "add"}
+		{Token.string == "as"}
+	):action
+	{LegRef}
+)
+-->
+	:action.Action = {type = "Insert"}
+
+Rule: AddQuote
+(
+	({Token.string == "add"}):action
+	(
+		{Token.string == "the"}
+		{Token.string == "expression"}
+	)?
+	{Token.string == "\u201C"}
+)
+-->
+	:action.Action = {type = "Insert", subType = "Quote"}
+
+Rule: Insert
+(
+	(
+		{Token.root == "insert"} |
+		{Token.string == "enter"}
+	):action
+	({Token.string==","})?
+	(
+		{Token.string == "\u2013"} |
+		(
+			{Token.string == ":"}
+			(
+				{Token.string == "\u2013"} |
+				{Token.string == "\u2014"}
+			)
+		) |
+		{Token.string == "\u2013\u2013"} |
+		{Token.string == "\u2014"} |
+		{Token.string == "--"} |
+		{Token.string == "-"} |
+		{Quote} |
+		{LegAmendment} |
+		{LegRef} |
+		(
+			{Token.string == "the"}
+			{Token.string == "following"}
+		) |
+		(
+			{Token.string == "at"}
+			{Token.string == "the"}
+			{Token.string == "beginning"}
+		) |
+		(
+			{Token.string == "at"}
+			{Token.string == "the"}
+			{Token.string == "end"}
+		) |
+		(
+			{Token.string == "as"}
+			{Token.string == "an"}
+			{Token.string == "italic"}
+			{Token.string == "heading"}
+		)
+	)
+)
+-->
+	:action.Action = {type = "Insert"}
+
+Rule: Insert2
+(
+	(
+		{Token.string == "insert\u2013"} |
+		{Token.string == "insert\u2013\u2013"} |
+		{Token.string == "insert\u2014"} |
+		{Token.string == "insert--"} |
+		{Token.string == "insert-"}		
+	) |
+	(
+		{Token.string == "there"}
+		(
+			(
+				{Token.string == "shall"}			
+				(
+					{Token.string == "in"}
+					{Token.string == "each"}
+					{Token.string == "case"}
+				)?
+				{Token.string == "be"}
+			) |
+			{Token.string == "is"}
+		)
+		{Token.string == "inserted"}
+	)
+):action
+-->
+	:action.Action = {type = "Insert"}
+
+Rule: Substitute
+(
+	({Token.string == "substitute"}):action
+	(
+		{Token.string == "\u2013"} |
+		{Token.string == "\u2013\u2013"} |
+		{Token.string == "\u2014"} |
+		{Token.string == "--"} |
+		{Token.string == "-"} |
+		{Quote} |
+		{LegAmendment} |
+		{LegRef} |
+		(
+			{Token.string == "the"}
+			{Token.string == "following"}
+		)
+	)
+)
+-->
+	:action.Action = {type = "Substitution"}
+
+Rule: Susbstitute2
+(
+	(
+		{Token.string == "substitute\u2013"} |
+		{Token.string == "substitute\u2013\u2013"} |
+		{Token.string == "substitute\u2014"} |
+		{Token.string == "substitute--"} |
+		{Token.string == "substitute-"}		
+	) |
+	(
+		{Token.string == "there"}
+		(
+			(
+				{Token.string ==~ "(shall)|(should)"}
+				{Token.string == "be"}
+			) |
+			{Token.string == "is"}
+		)
+		{Token.string == "substituted"}
+	)
+):action
+-->
+	:action.Action = {type = "Substitution"}
+	
+Rule: Replace
+(
+	(
+		{Token.root == "replace"}
+	):location
+	{Quote}
+	(
+		{Token.root == "with"}
+	):action
+)
+-->
+	:action.Action = {type = "Substitution"},
+	:location.Location = {type = "For"}
+
+Rule: ReplaceWith
+(
+	(
+		{Token.root == "replace"}
+		{Token.root == "with"}
+	):action
+)
+-->
+	:action.Action = {type = "Substitution"}
+	
+Rule: ProvisionChange
+(
+	(
+		{Token.string == "becomes", !Action} |
+		{Token.string == "become", !Action}		
+	):action
+	{LegRef}
+)
+-->
+	:action.Action = {type = "Substitution"}	
+	
+Rule: Repeal
+(
+	(
+		{Token.string == "is"} |
+		{Token.string == "are"}
+	)
+	(
+		{Token.string == "repealed"} |
+		{Token.string == "revoked"}
+	)
+):action
+-->
+	:action.Action = {type = "Repeal"}
+
+Rule: Amendment
+(
+	(
+		{Token.string == "be"} |
+		{Token.string == "is"} |
+		{Token.string == "are"}
+	)
+	({Token.string == "further"})?
+	(
+		{Token.string == "amended"} |
+		{Token.string == "renumbered"}
+	)
+	(
+		{Token.string == "as"}
+		{Token.string == "follows"}
+	)?:asfollows
+):action
+-->
+	:action.Action = {type = "Amendment"},
+	:asfollows.Controller = {type = "AsFollows"}
+	
+/* In some instances a reference to amendments in another part of the document is made */
+Rule: AmendmentSetOutIn
+(
+	(
+		(
+			{Token.string == "be"} |
+			{Token.string == "is"} |
+			{Token.string == "are"}
+		)
+		({Token.string == "further"})?
+		{Token.string == "amended"}
+	):action
+	(
+		(
+			{Token.string == "as"}
+			{Token.string == "provided"}
+			{Token.string ==~ "(in)|(by)"}
+			({LegRef}|{Anaphor})
+
+		) |
+		(
+			{Token.string == "in"}
+			{Token.string == "accordance"}
+			{Token.string == "with"}
+			({LegRef}|{Anaphor})
+		)
+	):asfollows
+)
+-->
+	:action.Action = {type = "Amendment"},
+	:asfollows.Controller = {type = "AsFollows"}
+	
+
+Rule: Amend
+(
+	({Token.root == "amend"}):action
+	(
+		{LegRef} |
+		(
+			({Token.string == "the"})?
+			{Legislation}
+		)
+	)
+)
+-->
+	:action.Action = {type = "Amendment"}
+
+Rule: InForce
+(
+	(
+		{Token.root == "come"}
+		{Token.string == "into"}
+		(
+			{Token.string == "force"} |
+			{Token.string == "operation"}
+		)
+	):inForce
+	(
+		(
+			{Token.string == "on"}
+			{Token.string == "the"}
+			{Token.string == "day"}
+			{Token.string == "on"}
+			{Token.string == "which"}
+		) |
+		(
+			{Token.string == "on"}
+			{Token.string == "the"}
+			({Token})?
+			{Token.string == "day"}
+			{Token.string == "after"}
+		) |
+		(
+			{Token.string == "on"}
+			{Token.string == "such"}
+			{Token.string == "day"}
+		) |
+		(
+			({Token.category == CD})[1,2]
+			{Token.string == "days"}
+			{Token.string == "after"}
+		)
+	)?:day
+)
+-->
+	:inForce.Action = {type = "ComingIntoForce"},
+	:day.Date = {}
+
+Rule: Delete
+(
+	(
+		{Token.root == "omit"} |
+		{Token.root == "Omit"}		
+	):delete
+	(
+		{Token.string == "\u2014"} |
+		{Token.string == "\u2013"} |
+		{Token.string == "\u2013\u2013"}
+	)
+)
+-->
+	:delete.Action = {type = "Delete"}
+	
+
+Rule: Repeal
+(
+	(
+		(
+			{Token.string ==~ "(shall)|(should)"}
+			{Token.string == "be"}
+		) |
+		{Token.string == "is"} |
+		{Token.string == "are"}
+	)
+	(
+		{Token.string == "omitted"}
+	)
+):action
+-->
+	:action.Action = {type = "Delete"}
+
+Rule: DeleteRef
+(
+	(
+		{Token.root == "omit"} |
+		{Token.root == "delete"}
+	):delete
+	{LegRef}
+)
+-->
+	:delete.Action = {type = "Delete"}
+
+Rule: DeleteRuleRef
+(
+	(
+		{Token.root == "omit"} |
+		{Token.root == "delete"}
+	):delete
+	{Token}
+	{LegRef, Token.root == "rule"}
+)
+-->
+	:delete.Action = {type = "Delete"}
+
+Rule: DeleteHeading
+(
+	({Token.root == "omit"}):delete
+	(
+		{Token.string == "the"}
+		{Token.string == "heading"}
+	):heading
+)
+-->
+	:delete.Action = {type = "Delete"},
+	:heading.Location = {type = "Heading"}
+
+Rule: DeleteAnaphor
+(
+	({Token.root == "omit"}):delete
+	{Anaphor}
+)
+-->
+	:delete.Action = {type = "Delete", subType = "Anaphor"}
+
+
+Rule: DeleteLocation
+(
+	({Token.root == "omit"}):delete
+	{Token.string == "from"}
+)
+-->
+	:delete.Action = {type = "Delete"}
+
+Rule: DeleteEntries
+(
+	({Token.root == "omit"}):delete
+	{Token.string == "the"}
+	{Token.string == "entries"}
+)
+-->
+	:delete.Action = {type = "Delete"}
+
+/*
+Rule: DeleteSentence
+(
+	{Token.root == "omit"}
+	(
+		{Token.string == "the"}
+		{Token.string == "sentence"}
+	):sentence
+)
+-->
+	:sentence.Location = {type = "Sentence"}
+*/
+
+Rule: DeleteMisc
+(
+	{Token.root == "omit"}
+):match
+-->
+	:match.Action = {type = "Delete"}
+
+
+Rule: DeleteQuote
+(
+	(
+		{Token.root == "omit"} |
+		{Token.root == "delete"} |
+		(
+			{Token.string == "leave"}
+			{Token.string == "out"}
+		)
+	):delete
+	(
+		{Token.string == ","}
+		{Token.string == "in"}
+		{Token.string == "each"}
+		{Token.string == "place"}
+		{Token.string == ","}
+	)?
+	({Token.root == "the"})?
+	{Quote}
+)
+-->
+	:delete.Action = {type = "Delete"}
+
+Rule: CeaseEffect
+(
+	{Token.string == "cease"}
+	{Token.string == "to"}
+	{Token.string == "have"}
+	{Token.string == "effect"}
+):ceaseEffect
+-->
+	:ceaseEffect.Action = {type = "Repeal"}
+
+Rule: Renumber
+(
+	({Token.string ==~ "(renumber)|(become)"}):match
+	{LegRef}
+)
+-->
+:match.Action = {type = "Renumber"}

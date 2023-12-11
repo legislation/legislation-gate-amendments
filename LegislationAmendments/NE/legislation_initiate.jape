@@ -1,0 +1,30 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_initiate.jape
+* Author:	Paul Appleby
+* Description:	This set of JAPE files is used to 'transfer' information from the legislation markup
+		into the working annotation set and at the same time mask items that we're not interested in.
+* Date created:	15/02/2011
+* This version:	0.1
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+MultiPhase:	LegislationInitiate
+Phases:
+
+legislation_retain_from_XML
+//legislation_mask_items
+legislation_footnote_citations
+legislation_footnote_citations_2

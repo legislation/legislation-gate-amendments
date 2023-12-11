@@ -1,0 +1,137 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_provisions.jape
+* Author:	Paul Appleby
+* Description:	Identify provisions within amending document that are cross-referenced
+* Date created:	15/03/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Provisions
+Input:  Token LegRef Location Action Legislation
+Options: control = appelt
+
+Rule: Avoid
+(
+	{Location}
+)
+--> {}
+
+
+Rule: Provision
+(
+	{Token.root == "the"}
+	{Token.string == "following"}
+	(
+		{Token.string == "entries"} |
+		{Token.string == "articles"} |
+		{Token.string == "regulations"} |
+		{Token.string == "enactments"} |
+		{Token.string == "provisions"} |
+		{Token.string == "paragraph"} |
+		{Token.string == "paragraphs"}
+	)
+):provisions
+-->
+	:provisions.CrossRef = {type = "Provision"}
+
+Rule: AllProvisions
+(
+	(
+		{Token.root == "the"}
+		{Token.string == "following"}
+	):provisions
+	{Action.type == "Repeal"}
+)
+-->
+	:provisions.CrossRef = {type = "Provision", subType = "All"}
+
+
+Rule: ProvisionIn
+(
+	(
+		{Token.root == "the"}
+		{Token.string == "provisions"}
+	):provisions
+	{Token.string == "in"}
+	{LegRef}
+)
+-->
+	:provisions.CrossRef = {type = "Provision"}
+
+
+Rule: ProvisionLegislation
+(
+	(
+		{Token.root == "the"}
+		{Token.string == "provisions"}
+	):provisions
+	{Token.string == "of"}
+	({Token.string == "the"})?
+	{Legislation}
+)
+-->
+	:provisions.CrossRef = {type = "Provision"}
+
+
+Rule: Provision
+(
+	{Token.root == "in"}
+	{Token.string == "the"}
+	(
+		(
+			{Token.string == "provisions"}
+			{Token.string == "mentioned"}
+		) |
+		(
+			{Token.string == "enactments"}
+		)
+	)
+):provisions
+-->
+	:provisions.CrossRef = {type = "Provision"}
+ 
+ 
+ Rule: ProvisionList
+ (
+	{Token.root == "the"}
+	(
+		{Token.string == "provisions"} |
+		{Token.string == "enactments"}
+	)
+	{Token.string == "are"}
+ 	(
+		{Token.string == "\u2013"} |
+		{Token.string == "\u2013\u2013"} |
+		{Token.string == "\u2014"} |
+		{Token.string == "--"} |
+		{Token.string == "-"}
+	)
+ ):list
+ -->
+	:list.Provisions = {}
+	
+Rule: HasEffect
+(
+	{Token.string == "as"}
+	{Token.string == "it"}
+	{Token.string == "has"}
+	{Token.string == "effect"}
+	{Token.string == "by"}
+):hasEffect
+-->
+	:hasEffect.CrossRef = {type = "HasEffect"}
+

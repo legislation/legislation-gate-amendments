@@ -1,0 +1,101 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_store_items_for_mask.jape
+* Author:	Paul Appleby
+* Description:	Store certain annotations that get removed by masking
+* Date created:	20/10/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	StoreItemsForMask
+Input:  ExtentStructure CommencementStructure EnablingPowerStructure NonTextualStructure RepealsRevocations Legislation StoreLegislation LongDistanceCommencementStructure NonTextualPhrase
+Options: control = appelt
+
+/*
+This phase gets run twice. The first time on legislation will be available but the second time will be after other
+parse stages have run. So the Store rule will only be applicable the second time around
+*/
+
+/* Store all the other types of structures that have actually parsed against their grammars */
+Rule: Store
+(
+	{NonTextualStructure} |
+	{ExtentStructure} |
+	{CommencementStructure} |
+	{EnablingPowerStructure} |
+	{RepealsRevocations} |
+	{LongDistanceCommencementStructure}
+):annotation
+-->
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+	AnnotationSet inputFullSet = inputAS.getContained(annotationSet.firstNode().getOffset(), annotationSet.lastNode().getOffset());
+	HashSet<String> coveringList = new HashSet<String>();
+	/* We don't bother with legislation in this list - it is handled separately because we ALWAYS want that */
+	coveringList.add("LegRef");
+	coveringList.add("Action");
+	coveringList.add("Quote");
+	coveringList.add("Location");
+	coveringList.add("LegAmendment");
+	coveringList.add("Date");
+	coveringList.add("Anaphor");
+	coveringList.add("Action");
+	coveringList.add("CrossRef");
+	coveringList.add("LegPnumber");
+	coveringList.add("ExtendTo");
+	coveringList.add("ExtentCountries");
+	coveringList.add("NonTextualPhrase");
+	AnnotationSet inputSet = inputFullSet.get(coveringList);	
+	/* We'll use a weird bit of GATE here. We'll use a reference to the annotation features and store that.
+	That will allow updates to those features, including the addition of an id to filter through to the stored
+	values. Then, when we restore the stored information the features are all up to date! */
+	for (Annotation itemAnn: inputSet) {
+		try {
+			outputAS.add(itemAnn.getStartNode().getOffset(), itemAnn.getEndNode().getOffset(),
+				"Store" + itemAnn.getType(), itemAnn.getFeatures());
+		}
+		catch (Exception e) {
+			System.err.println("Could not add store annotation: " + e.getMessage());
+		}
+	}
+
+}
+
+/* We do legislation separately to avoid storing nested legislation, which gets removed during cleaning
+As we're in appelt mode the nested item won't be hit
+*/
+Rule: StoreLegislation
+(
+	{Legislation, !StoreLegislation}
+):annotation
+-->
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation itemAnn = annotationSet.iterator().next();
+	/* We'll use a weird bit of GATE here. We'll use a reference to the annotation features and store that.
+	That will allow updates to those features, including the addition of an id to filter through to the stored
+	values. Then, when we restore the stored information the features are all up to date! */
+	try {
+		outputAS.add(itemAnn.getStartNode().getOffset(), itemAnn.getEndNode().getOffset(),
+			"Store" + itemAnn.getType(), itemAnn.getFeatures());
+	}
+	catch (Exception e) {
+		System.err.println("Could not add store annotation: " + e.getMessage());
+	}
+
+}

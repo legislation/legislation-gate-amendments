@@ -1,0 +1,46 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_quote_3.jape
+* Author:	Stephen Cresswell
+* Description:	Annotation for quote without context, possibly containing a nested Quote1
+* Date created:	17/02/2019
+* This version:	0.1
+* 
+* For TOES output, we need to distinguish 
+* e.g. "words substituted" from "word substituted".
+* ... so here we add effectText feature to Quote annotations
+* with value "word" or "words"
+*/
+
+
+Phase:	LegislationQuote3
+Input:  Quote
+Options: control = appelt
+
+Rule: Quote3
+( {Quote} ):quote
+-->
+{
+  AnnotationSet quoteAnns= bindings.get("quote");
+  Annotation ann= (Annotation)quoteAnns.iterator().next();
+  String content= gate.Utils.cleanStringFor(doc,ann);
+  FeatureMap fm= ann.getFeatures();
+  // Note that content includes the quote marks.
+  //                                                    Allow a couple of words at the end (e.g. hundred million)
+  if(content.matches("^.(£|(EUR))([\\s,]?\\d+)+(\\.\\d+)?(\\s\\S+){0,2}.$")) {
+      fm.put("effectText","sum");
+  } else if(content.contains(" ")) {
+      fm.put("effectText","words");
+  } else {
+      fm.put("effectText","word");
+  }
+  if(content.matches("^.This\\s+Regulation\\s+shall\\s+be.*"))
+      fm.put("type","Signature");
+}

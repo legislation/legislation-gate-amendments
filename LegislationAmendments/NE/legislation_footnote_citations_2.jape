@@ -1,0 +1,43 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase:	Footnote_citations_2
+Input:  Legislation
+Options: control = once
+
+/* 
+FootnoteRef annotations are awkward, because they contain no text, and it appears that JAPE 
+cannot match patterns which start and finish at the same node, so we are forced to put
+in a rule like this, where the LHS is only there to ensure that the rule is triggered 
+once, and it's only to trigger some java.
+We copy the annotation to the outputAS, but in doing so we stretch it to include the 
+following character, thereby making it detectable to a JAPE rule later on.  However,
+we have to treat it carefully, because of the stolen character, it could have overlap
+another relevant annotation.
+*/
+Rule: Footnote
+({Legislation})
+--> 
+{
+  AnnotationSet footnoteRefAS= inputAS.get("FootnoteRef");
+  Iterator<Annotation> it= footnoteRefAS.iterator();
+  while(it.hasNext()) {
+    Annotation ann= it.next();
+	try {
+  	  outputAS.add(
+	    ann.getStartNode().getOffset(),
+	    ann.getEndNode().getOffset()+1,
+	    ann.getType(),
+	    ann.getFeatures() );
+    } catch (InvalidOffsetException e) {
+	  // could only happen at end of document
+	  e.printStackTrace();
+	}
+  }
+}

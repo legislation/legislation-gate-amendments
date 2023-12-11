@@ -1,0 +1,115 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_extents.jape
+* Author:	Paul Appleby
+* Description:	Annotations for extents
+* Date created:	02/03/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	Extents
+Input:  Token LineBreak
+Options: control = appelt
+
+
+Macro: COUNTRIES
+(
+	{Token.string == "England"} |
+	{Token.string == "Wales"} |
+	{Token.string == "Scotland"} |
+	(
+		{Token.string == "Northern"}
+		{Token.string == "Ireland"}
+	) |
+	(
+		{Token.string == "Great"}
+		{Token.string == "Britain"}
+	) |
+	(
+		{Token.string == "the"}
+		{Token.string == "Isle"}
+		{Token.root == "of"}
+		{Token.string == "Man"}
+	)
+)
+
+Rule: Extent
+(
+	(
+		{Token.root == "extend"}
+		{Token.string == "to"}
+	):extendTo
+	(
+		(COUNTRIES)
+		(
+			(
+				{Token.string == "and"}
+				(COUNTRIES)
+			) |
+			(
+				{Token.string == ","}
+				(COUNTRIES)
+			)
+		)*
+	):extentCountries
+)
+-->
+{
+	AnnotationSet extendToSet = bindings.get("extendTo");
+	AnnotationSet countriesSet = bindings.get("extentCountries");
+	
+	try {
+		FeatureMap extentFeatures = Factory.newFeatureMap();
+		FeatureMap countriesFeatures = Factory.newFeatureMap();
+		outputAS.add(extendToSet.firstNode(), extendToSet.lastNode(), "ExtendTo", extentFeatures);
+		
+		String countryText = gate.Utils.stringFor(doc, countriesSet);
+		String countries = "";
+		if (countryText.contains("England")) countries += "England ";
+		if (countryText.contains("Scotland")) countries += "Scotland ";
+		if (countryText.contains("Wales")) countries += "Wales ";
+		if (countryText.contains("Northern Ireland")) countries += "NorthernIreland ";
+		if (countryText.contains("Great Britain")) countries += "GreatBritain ";
+		if (countryText.contains("Isle of Man")) countries += "IsleOfMan";
+		countriesFeatures.put("countries", countries.trim());
+		
+		outputAS.add(countriesSet.firstNode(), countriesSet.lastNode(), "ExtentCountries", countriesFeatures);
+	}
+	catch (Exception e) {
+		System.err.println("Extent error: " + e.getMessage());
+	}
+}
+
+Rule: ExtentParts
+(
+	(
+		{Token.root == "extend"}
+		{Token.string == "to"}
+	):extendTo
+	(
+		{Token.string == "the"}
+		{Token.root == "part"}
+	)
+)
+-->
+	:extendTo.ExtendTo = {}
+
+
+
+
+

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>  
+<CREOLE-DIRECTORY>
+
+	<!-- plugins can require other plugins as follows:
+	<REQUIRES GROUP="group" ARTIFACT="artifact" VERSION="version"/>
+	-->
+
+</CREOLE-DIRECTORY>

@@ -1,0 +1,43 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_paren_blocks.jape
+* Author:	Paul Appleby
+* Description:	Identify parenthesised sections
+* Date created:	02/12/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	ParenBlocks
+Input:  Token Split
+Options: control = appelt
+
+// We don't want actions inside parentheses - these will be unwanted phrases 
+Rule: AvoidAction
+(
+	{Token.string == "("}
+	(
+		{Token.string != ")", Token.string != "(", !Split} |
+		(
+			{Token.string == "("}
+			({Token.string != ")", !Split})+
+			{Token.string == ")"}
+		)
+	)+
+	{Token.string == ")"}
+):block
+-->
+	:block.Parens = {}
+

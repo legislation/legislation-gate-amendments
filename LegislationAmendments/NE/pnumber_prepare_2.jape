@@ -1,0 +1,66 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: Pnumber_prepare_2
+Input: P1 P2 P3 P4 P5
+Options: control = all
+
+Macro: TRANSFER_URI_TO_PNUMBERS
+:match
+{
+	AnnotationSet panns= (AnnotationSet)bindings.get("match");
+	for( Annotation pann : panns) {
+		//System.out.println(pann.getStartNode().getOffset()+" "+pann.getEndNode().getOffset()+" "+pann.getType());
+		String levelTargetStr= pann.getType().replace("P","");
+		int levelTarget= Integer.parseInt(levelTargetStr);
+		AnnotationSet pnumberAnns= gate.Utils.getContainedAnnotations(inputAS,pann,"LegPnumber");
+		for(Annotation pnumberAnn : pnumberAnns) {
+			FeatureMap fm= pnumberAnn.getFeatures();
+			Long level= (Long)fm.get("level");
+			if(level!=null&&level==levelTarget) {
+				fm.put("idURI",pann.getFeatures().get("IdURI"));
+			}
+		}
+	}
+}
+
+Rule: P5
+(
+   {P5}
+):match
+-->
+TRANSFER_URI_TO_PNUMBERS
+
+Rule: P4
+(
+   {P4}
+):match
+-->
+TRANSFER_URI_TO_PNUMBERS
+
+Rule: P3
+(
+   {P3}
+):match
+-->
+TRANSFER_URI_TO_PNUMBERS
+
+Rule: P2
+(
+   {P2}
+):match
+-->
+TRANSFER_URI_TO_PNUMBERS
+
+Rule: P1
+(
+   {P1}
+):match
+-->
+TRANSFER_URI_TO_PNUMBERS

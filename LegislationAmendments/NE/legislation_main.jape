@@ -1,0 +1,76 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_main.jape
+* Author:	Paul Appleby
+* Description:	JAPE pipeline for legislation amendments processing.
+
+* Date created:	15/02/2011
+* This version:	0.1
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+MultiPhase:	LegislationGeneric
+Phases:
+
+bracketted_phrase
+
+block_amendment_context
+
+/* Annotate BlockAmendments that begin with a LegNumber that is also a LegRef */
+/* ... then classify preliminary words/title etc. */
+number_in_amendment
+number_in_amendment_2
+number_in_amendment_3
+
+/* Identify references to legislation */
+legislation_legislation_prework
+legislation_legislation_1
+legislation_legislation_2
+legislation_legislation_3
+legislation_legislation_3a
+legislation_legislation_4
+legislation_legislation_EU
+
+/* Identify references to fragments (paragraphs) of legislation */
+
+legislation_fake_sections
+
+/* Identify inline text fragments that form part of textual amendments */
+legislation_quote_1
+legislation_quote_2
+legislation_quote_3
+
+/* Identify dates */
+des_date
+des_day_resolution
+
+legislation_paren_blocks
+legislation_extents
+legislation_interpretation
+legislation_interpretation_ref
+legislation_anaphor
+legislation_actions
+legislation_provisions
+legislation_chronology
+legislation_amendment_related
+legislation_amendment_location
+legislation_enabling_power
+legislation_anaphor_2
+legislation_actions_2
+legislation_amendment_location_2
+legislation_exception
+
+
+

@@ -1,0 +1,50 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_find_structure_phrases_4.jape
+* Author:	Paul Appleby
+* Description:	Find repeals/revocations structures
+* Date created:	22/06/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	FindRepealsRevocations
+Input:  Mask Token
+Options: control = appelt
+
+Rule: RemoveRepealsRevocationsMask
+(
+	(
+		{Mask.type == "Title", Token.string == "Repeals"} |
+		{Mask.type == "Title", Token.string == "Revocations"} |
+		{Mask.type == "Title", Token.string == "REPEALS"} |
+		{Mask.type == "Title", Token.string == "REVOCATIONS"}
+	)
+	({Mask.type == "Reference"})?
+	({Mask.type == "Tabular"}):table
+)
+-->
+{
+	try {
+		AnnotationSet itemSet = bindings.get("table");
+		outputAS.removeAll(itemSet);
+		FeatureMap features = Factory.newFeatureMap();
+		outputAS.add(itemSet.firstNode().getOffset(), itemSet.lastNode().getOffset(), "RepealsRevocations", features);
+	}
+	catch (Exception e) {
+	}
+}

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en"><head><title>Legislation Amendments GATE pipeline: Getting Started</title><meta charset="utf-8"/></head><body>
+<h1>Getting Started</h1>
+<h2>Introduction</h2>
+<p>This package is a text processing pipeline that uses the <a href="https://gate.ac.uk">GATE</a> natural language processing framework to parse UK legislation and identify where the text of that legislation makes amendments to other items of legislation.</p>
+<p>The Legislation Services team at The National Archives (who are responsible for publishing both original and revised UK legislation) use this pipeline to automatically identify changes to existing legislation that occur as part of new legislation, complementing the work of human editors.</p>
+<p>The pipeline comprises a sequence of text processing steps. These steps use legislation-specific <a href="http://gate.ac.uk/userguide/chap:gazetteers">gazetteers</a>, <a href="https://gate.ac.uk/userguide/chap:jape">JAPE rules</a> and plug-ins implemented in Java code, including a bespoke parser. The outputs of the pipeline are an annotated version of the XML of the input legislation document, plus an XML representation of the amendments made by the document to other items of legislation.</p>
+<p>The National Archives run this pipeline within a purpose-built Data Enrichment Service (DES). However, it can also be run separately within the GATE Developer environment (ideal for experimentation) or called from other Java code.  This document gives a simple introduction to the pipeline by running it in the GATE developer environment.</p>
+<h2>Installation</h2>
+<h3>Software dependencies</h3>
+<ul>
+<li>The GATE Developer environment, available from <a href="https://gate.ac.uk/download">https://gate.ac.uk/download</a>.
+<ul>
+<li>This package has been tested with GATE 8.2 and GATE 8.6.1.</li>
+<li><strong>Note:</strong> GATE 8.5 and onwards use an online plugin repository instead of bundling plugins, and so <strong>the format of .gapp files has changed.</strong> The default version of the application (<code>legislation-amendments.gapp</code>) uses the new format. If you are using GATE 8.2–8.4, make sure to use the <code>legislation-amendments-pre-gate-8.5.gapp</code> application file instead.</li>
+</ul>
+</li>
+<li>A Java JDK, version 8 or later. You can download a free, open licensed JDK at <a href="https://openjdk.java.net/">https://openjdk.java.net/</a>.</li>
+<li>SWI-Prolog 7.7.25 or later, available at <a href="https://www.swi-prolog.org/Download.html">https://www.swi-prolog.org/Download.html</a>.</li>
+</ul>
+<h3>How to install</h3>
+<ol>
+<li>
+<p>Download and extract the Legislation Amendments GATE package.</p>
+<ul>
+<li>The directory structure of the package should be as follows:</li>
+</ul>
+<pre><code>	(installation dir)/
+		LegislationAmendments/
+			doc/
+				(documentation here)
+			embedded/
+				(sample Java app that embeds the pipeline using GATE Embedded)
+			gate-resources/
+				(bespoke plugins here)
+			java-lib/
+				(Required Java EE libraries that are missing in newer JDKs)
+			plugins/
+				(GATE bundled plugins here)
+			LegislationAmendments/
+				legislation-amendments.gapp
+				gazetteer/
+					(legislation gazetteers here)
+				NE/
+					(JAPE rules here)
+</code></pre>
+<ul>
+<li><strong>Note: If you are using Windows and you extract the package to a network drive or share, GATE may fail to load the application.</strong> We recommend that you extract the package to a folder on a local disk instead.</li>
+<li>If you must save the package onto a network drive or share, you can manually edit the <code>legislation-amendments.gapp</code> file to point towards the correct location:
+<ol>
+<li>Open <code>LegislationAmendments/LegislationAmendments/legislation-amendments.gapp</code>.</li>
+<li>Find and replace all instances of <code>$relpath$</code> with <code>file://///server/share/path/to/LegislationAmendments/LegislationAmendments/</code>, where <code>//server/share/path/to/</code> is the path to the folder in the network location where you have extracted the package (e.g. if you extracted the package into a folder called <code>work/gate/</code> underneath the share <code>\\filesrv\homedir$</code>, replace <code>$relpath$</code> with <code>file://///filesrv/homedir$/work/gate/LegislationAmendments/LegislationAmendments/</code>)</li>
+<li>Save the file.</li>
+</ol>
+</li>
+<li>This problem appears to result from how GATE handles Windows UNC paths and should not occur on macOS or Linux/UNIX systems.</li>
+</ul>
+</li>
+<li>
+<p>Download and install GATE. We recommend installing GATE 8.6.1 or newer.</p>
+<ul>
+<li><strong>Note:</strong> GATE appears to have bugs that affect its performance on newer macOS systems. In particular, the Resource Features pane (that shows additional metadata relating to a processed document) does not work reliably, so you may struggle to extract the Effects data if you run GATE on macOS. However, most other features appear to work correctly.</li>
+<li>After installation, you will likely need to change some files in the GATE Developer installation directory for it to work properly. Browse to that directory (on Windows, this is usually <code>C:\Program Files (x86)\GATE_Developer_8.x.x</code> where x.x is the version number you installed; on macOS/Linux/UNIX, the location will vary)
+<ul>
+<li>We recommend increasing the amount of RAM available to GATE for optimum performance. If you have at least 4GB of RAM, open <code>gate.l4j.ini</code> in a text editor and add on a new line the text <code>-Xmx2G</code>. (If you have more than 4GB of RAM, increase the <code>2</code> to half of the RAM available in your system.) This will allow GATE to use more RAM, which will mean that it will both run faster and run out of memory less often.</li>
+<li>Newer releases of Java no longer contain the Java EE libraries, some of which GATE requires to function. You will see <code>java.lang.NoClassDefFoundError</code> errors in the Messages pane of GATE if these libraries are missing. To avoid this, we recommend that you copy the files from the <code>java-lib</code> directory of this package to the <code>lib</code> directory in your GATE installation directory.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Download and install SWI-Prolog.</p>
+<ul>
+<li><strong>Note:</strong> The GATE package will look for SWI-Prolog at <code>C:/Program Files/swipl/bin/swipl.exe</code> (on Windows) or <code>/usr/bin/swipl</code> (on macOS/Linux/UNIX). If you have installed SWI-Prolog elsewhere, you will need to change the path in the Prolog Parser component's creole.xml file.</li>
+<li>To specify a new path to SWI-Prolog, open <code>LegislationAmendments/gate-resources/Prolog_Parser/creole.xml</code> with a text editor and add the path to the SWI-Prolog interpreter in the <code>DEFAULT</code> attribute of the <code>swiPrologExecutable</code> parameter:</li>
+</ul>
+</li>
+</ol>
+<pre><code class="language-xml">&lt;!-- change "C:/path/to/swipl/bin/swipl.exe" to the SWI-Prolog path on your system --&gt;
+&lt;PARAMETER 
+	NAME="swiPrologExecutable"
+	COMMENT="The location of the SWI-Prolog executable"
+	OPTIONAL="true"
+	DEFAULT="C:/path/to/swipl/bin/swipl.exe"
+	RUNTIME="false"&gt;java.lang.String&lt;/PARAMETER&gt;
+</code></pre>
+<p>You should now be ready to run the application in the GATE developer environment.</p>
+<h2>In the GATE developer environment</h2>
+<p>If you wish to experiment with the pipeline and inspect the intermediate results, it is best to run it in the GATE development environment. This environment provides an interactive graphical interface. In the following section, we will walk through an example of running a single document through the pipeline in the GATE Developer environment.</p>
+<p>For further information about GATE, please refer to the GATE website at<br/>
+<a href="https://gate.ac.uk/">https://gate.ac.uk/</a>.</p>
+<ol>
+<li>
+<p>Load the pipeline.</p>
+<ul>
+<li>
+<p>Right click on <strong>Applications 🡆 Restore Application from File</strong>.  The GATE application is specified in the file <code>LegislationAmendments/LegislationAmendments/legislation-amendments.gapp</code>. (Remember that for versions of GATE older than 8.5, you must instead use the application file  <code>LegislationAmendments/LegislationAmendments/legislation-amendments-pre-gate-8.5.gapp</code>)</p>
+<p><img src="pc1_RestoreApplicationFromFile.png" alt=""/></p>
+</li>
+<li>
+<p>It should now look like this:</p>
+<p><img src="pc2_LegislationAmendmentsLoaded.png" alt=""/></p>
+</li>
+</ul>
+</li>
+<li>
+<p>Load a document.</p>
+<ul>
+<li>
+<p>This is done by right-clicking on the <strong>Language Resources</strong> and selecting <strong>New 🡆 GATE Document</strong>.</p>
+<p><img src="pc3_NewGateDocument.png" alt=""/></p>
+</li>
+<li>
+<p>An XML legislation document can be selected by choosing <strong>sourceURL</strong> in the dialog box. <strong>Make sure to choose the correct settings as listed below to ensure GATE parses the document correctly:</strong></p>
+<ul>
+<li><strong>encoding:</strong> UTF-8</li>
+<li><strong>markupAware:</strong> true</li>
+<li><strong>preserveOriginalContent:</strong> true</li>
+</ul>
+<p><img src="pc4_ParametersForTheNewGateDocument.png" alt=""/></p>
+</li>
+</ul>
+</li>
+<li>
+<p>Add the document to a corpus.</p>
+<ul>
+<li>
+<p>The pipeline runs on a corpus of documents (even when processing a single document), so it's necessary to create a corpus to contain this document.  This is done by right-clicking on the document, and selecting <strong>New Corpus with this Document</strong>.</p>
+<p><img src="pc5_NewCorpusWithThisDocument.png" alt=""/></p>
+</li>
+</ul>
+</li>
+<li>
+<p>Run the pipeline.</p>
+<ul>
+<li>
+<p>To do this, double-click the name of the pipeline <strong>Legislation Amendments</strong>.  This presents a view of the pipeline steps (“processing resources”).  Make sure that the correct <strong>corpus</strong> is selected, and click <strong>Run this Application</strong>.</p>
+<p><img src="pc7_Pipeline.png" alt=""/></p>
+</li>
+</ul>
+</li>
+<li>
+<p>Examine the results.</p>
+<ul>
+<li>
+<p>The results can be examined by double-clicking on the <strong>document</strong>, and then clicking <strong>Annotation Sets</strong> in the top left corner of the Document Editor.  This brings up the coloured list of annotations on the right of the window.</p>
+<p><img src="pc8_AnnotationSets.png" alt=""/></p>
+</li>
+<li>
+<p>It can be seen that there are various annotation sets:</p>
+<ul>
+<li><strong>Original markup</strong>, containing the XML markup from the unprocessed document.</li>
+<li><strong>Legislation</strong>, containing markups created by the gazetteers and JAPE rules in the pipeline</li>
+<li><strong>Sections0, Sections1</strong>, input and output annotations of the sections parser</li>
+<li><strong>Effects0, Effects1</strong>, input and output annotations of the effects parser</li>
+<li><strong>Output</strong>, containing annotations selected for adding as XML to the output version of the document</li>
+</ul>
+</li>
+<li>
+<p>To show annotations in the document, click on the checkbox next to specific annotation types.  To see additional information (features) relating to a specific annotation, place the cursor on the coloured text and press <strong>Ctrl-e</strong>.</p>
+<p><img src="pc9_OutputAnnotations.png" alt=""/></p>
+</li>
+<li>
+<p>The annotations in the <strong>Output</strong> annotation set are the ones output into the final marked-up XML.</p>
+<p><img src="pc10_EditAnnotation.png" alt=""/></p>
+</li>
+</ul>
+</li>
+</ol>
+<h2>Output format of the document</h2>
+<p>The pipeline creates a large number of annotations on the document as it runs. The way that the Editorial system uses the pipeline is that:</p>
+<ol>
+<li>
+<p>The pipeline configures GATE to add a certain subset of the annotations from the <em>Output</em> annotation set into the document when GATE re-exports it as XML.  The exported annotations are:</p>
+<ul>
+<li>gate:Action</li>
+<li>gate:Controller</li>
+<li>gate:LegAmendment</li>
+<li>gate:Legislation</li>
+<li>gate:Location</li>
+<li>gate:Quote</li>
+</ul>
+</li>
+<li>
+<p>The pipeline stores additional information in GATE “features” associated with the processed document. The feature named <code>xmlContent</code> contains the “Effects” XML, which describes the amendments to other legislation contained in the text of the document. The Editorial system uses this XML to generate the “tables of effects” (TOES) that editors will use as a guide to produce revised versions of affected documents.</p>
+<ul>
+<li>You can view this XML yourself by finding the <code>xmlContent</code> feature in the <strong>“Resource Features”</strong> pane in the far bottom left of the window, then scrolling right to see the content. You can copy and paste this XML into a text editor for ease of reading or re-use.</li>
+<li>The Editorial system combines this additional XML and the modified document XML together into a new XML document, which can then be further processed for various output formats.</li>
+</ul>
+</li>
+<li>
+<p>The Editorial system applies XSLT transforms to the output document to generate an annotated PDF and HTML file and a TOES spreadsheet.</p>
+</li>
+</ol>
+<p>To export the marked-up document with the annotations in the list above from within the GATE Developer environment:</p>
+<ol>
+<li>Right click on the document in the left hand sidebar and click <strong>Save as… 🡆 Inline XML</strong>.</li>
+<li>Choose the following settings:
+<ul>
+<li><strong>Make sure you manually input a correct file path</strong> in the <strong>Save to:</strong> field as GATE seems to reliably choose an invalid path, and <strong>it will not save the file or warn you if you attempt to save to an invalid path!</strong></li>
+<li><strong>annotationSetName:</strong> Output</li>
+<li><strong>annotationTypes:</strong> <em>(you will need to click the adjacent button to open the dialog, select and remove the existing options, then add each of these in turn)</em>
+<ul>
+<li>gate:Action</li>
+<li>gate:Controller</li>
+<li>gate:LegAmendment</li>
+<li>gate:Legislation</li>
+<li>gate:Location</li>
+<li>gate:Quote</li>
+</ul>
+</li>
+<li><strong>includeOriginalMarkups:</strong> true</li>
+<li><strong>includeFeatures:</strong> true</li>
+<li><strong>encoding:</strong> UTF-8</li>
+</ul>
+</li>
+<li>Click OK. <strong>Double check the file has saved correctly before closing GATE!</strong></li>
+</ol>
+<h2>Running the pipeline in an embedded GATE instance</h2>
+<p>You can use the GATE Embedded library to build a Java application or library that embeds a GATE pipeline. A simple example program that uses GATE Embedded to embed the Legislation Amendments application is available in the <code>LegislationAmendments/embedded/</code> directory.</p>
+<h2>Further details</h2>
+<ul>
+<li>Further details of the processing steps are provided in the separate document <strong>“Details of the TNA eMarkup Process”</strong>.</li>
+<li>A supplementary spreadsheet mapping the dependencies between annotation sets and between annotations is provided in the file <strong>AnnotationSets.xslx</strong>.</li>
+</ul>
+
+</body></html>

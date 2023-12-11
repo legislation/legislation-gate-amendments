@@ -1,0 +1,29 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: sections_prepare_1a
+Input: Token SpaceToken brackettedNumber brackettedLetter brackettedRomanNumber brackettedLowerRoman
+Options: control = appelt
+
+Rule: brackettedPhrase
+(
+	{Token.string=="("}
+	(
+		({Token,Token.string!="(",Token.string!=")"}|
+		 {brackettedNumber}|
+		 {brackettedLetter}|
+		 {brackettedRomanNumber}|
+		 {brackettedLowerRoman}
+		)
+		({SpaceToken})?
+	)[3,30]
+	{Token.string==")"}
+):match
+-->
+:match.brackettedPhrase={}

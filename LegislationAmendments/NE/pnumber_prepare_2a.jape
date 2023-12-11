@@ -1,0 +1,89 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: Pnumber_prepare_2a
+Input: LegAmendment
+Options: control = appelt
+
+Rule: Amendment_pnumber 
+(
+	{LegAmendment}
+):match
+-->
+{
+	AnnotationSet anns= (AnnotationSet)bindings.get("match");
+	for( Annotation ann : anns) {
+		if(ann.getFeatures().get("list")!=null) break; // We already know refs
+		List<Annotation> pnumberAnns= gate.Utils.inDocumentOrder(gate.Utils.getContainedAnnotations(inputAS,ann,"LegPnumber"));
+		long lowestLevel=999;
+		List<String> items= new ArrayList<String>();
+		//System.out.println();
+		boolean isRange=false;
+		for ( Annotation pnumberAnn : pnumberAnns ) {
+			long level= (long)pnumberAnn.getFeatures().get("level");
+			//System.out.println("level="+level);
+			if(level<=lowestLevel) {
+				lowestLevel=level;
+				String item= "/"+gate.Utils.stringFor(doc,pnumberAnn).trim();
+				if(items.size()<2) {
+					items.add(item);
+					//System.out.println("Adding : "+item);
+				} else {
+					// Replacing upper limit - it's a range rather than a singleton or pair
+					items.set(1,item);
+					isRange= true;
+					//System.out.println("Setting : "+item);
+				}
+			}
+			outputAS.remove(pnumberAnn);
+		}
+		if(items.size()==2) {
+			if(isRange) {
+				items.set(0,(String)items.get(0)+"/rangeStart");
+				items.set(1,(String)items.get(1)+"/rangeEnd");
+			} else {
+				items.set(0,(String)items.get(0)+"/pairStart");
+				items.set(1,(String)items.get(1)+"/pairEnd");
+			}
+		} else if(items.size()==0) {
+			// LegAmendment doesn't contain any pnumber
+			// Downgrade LegAmendment to Quote
+			FeatureMap qfm= Factory.newFeatureMap();
+			qfm.put("effectText","words");
+			qfm.put("rule","ConvertedFromLagAmendment");
+			outputAS.add(ann.getStartNode(),ann.getEndNode(),"Quote",qfm);
+			outputAS.remove(ann);
+		}
+		// Get text for span between start of LegAmendment and first LegPnumber
+		String affectedExtra=null;
+		/* Now dealing with this upstream
+		if (!pnumberAnns.isEmpty()) {
+			Annotation firstPnumberAnn= pnumberAnns.get(0);
+			long start= anns.firstNode().getOffset();
+			long end= firstPnumberAnn.getStartNode().getOffset();
+			String preText= gate.Utils.cleanStringFor(doc,start,end);
+			//System.out.println("preText="+preText+"<");
+			if(!preText.isEmpty()&&preText.length()<80) {
+				if(preText.contains(" "))
+					affectedExtra="words";
+				else if(preText.equals(";"))
+					affectedExtra="semi-colon";
+				else
+					affectedExtra="word";
+			}
+		}
+		*/
+		if(lowestLevel<999) {
+			FeatureMap fm= ann.getFeatures();
+			fm.put("level",lowestLevel);
+			fm.put("list",items);
+			//if(affectedExtra!=null) fm.put("affectedExtra",affectedExtra);
+		}
+	}
+}

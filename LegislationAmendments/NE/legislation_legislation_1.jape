@@ -1,0 +1,103 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_legislation_1.jape
+* Author:	Paul Appleby
+* Description:	Extract primary legislation references from text
+* Date created:	15/02/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Legislation
+Input:  Lookup Token TempLegislation LegText TempActContainer
+Options: control = appelt
+
+/* The year is calculated separately as there may be multiple instances with the
+same title */
+
+Rule: AvoidLegislation
+Priority: 10
+(
+	{TempLegislation} |
+	{LegText, !TempActContainer}
+)
+-->{}
+
+Rule: Legislation
+(
+	({Token.string=="The"})?
+	{Lookup.majorType == legislation, Lookup.minorType != "uksi"}
+	(
+		{Token.string == "("}
+		{Token.orth == allCaps}
+		{Token.string == ")"}
+	)?
+	(
+		{Token.category == CD}
+	):legisyear
+	(
+		{Token.string == "("}
+		{Token.string == "asp"}
+		{Token.category == CD}
+		{Token.string == ")"}
+	)?
+):legis
+-->
+{	
+	AnnotationSet legisSet = bindings.get("legis");
+	AnnotationSet legisYearContainerSet = bindings.get("legisyear");
+
+	AnnotationSet legisTitleSet = legisSet.get("Lookup");
+	AnnotationSet legisYearSet = legisYearContainerSet.get("Token"); 	
+
+	Annotation titleAnn = legisTitleSet.iterator().next();
+	Annotation yearAnn = legisYearSet.iterator().next();	
+
+	if (titleAnn.getFeatures().get("context") != null) {
+		if (titleAnn.getFeatures().get("year") != null) {
+
+			// Get title from document
+			String titleText = gate.Utils.stringFor(doc, legisTitleSet);
+			// Get year from document
+			String yearYear = yearAnn.getFeatures().get("string").toString();
+			
+			// Get all possible title lookups
+			AnnotationSet possibleItemsSet = inputAS.get("Lookup", titleAnn.getStartNode().getOffset(), titleAnn.getEndNode().getOffset());
+
+			//System.out.println(titleText + "; SIZE:" + possibleItemsSet.size() + "; OFFSET: " + titleAnn.getStartNode().getOffset());
+			for (Annotation legLookup: possibleItemsSet) {		
+				try {
+					String lookupYear = legLookup.getFeatures().get("year").toString();
+					String lookupTitle = gate.Utils.stringFor(doc, legLookup);
+					// If the same use information
+					if (lookupYear.equals(yearYear) && titleText.equals(lookupTitle)) {
+						String context = legLookup.getFeatures().get("context").toString();;		
+						FeatureMap features = Factory.newFeatureMap();
+						features.put("context", context);
+						features.put("rule", "Legislation");
+						String type = legLookup.getFeatures().get("minorType").toString();
+						features.put("type", type);
+						outputAS.add(legisSet.firstNode(), legisSet.lastNode(), "Legislation", features);	
+						break;
+					}
+				}
+				catch (Exception e) {
+					System.err.println("Legislation identification error: " + e.getMessage());
+				}
+			}
+		}
+	}
+}
+

@@ -1,0 +1,114 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_enabling_power.jape
+* Author:	Paul Appleby
+* Description:	Annotations for markup for enabling powers
+* Date created:	03/03/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	EnablingPower
+Input:  Token
+Options: control = appelt
+
+
+Input:  Quote LegAmendment Mask Token LegBodyBlock LegScheduleBlock
+Options: control = appelt
+
+
+Rule: AvoidTransfer
+(
+	{LegAmendment} |
+	{LegScheduleBlock} |
+	{LegBodyBlock} |
+	{Quote} |
+	{Mask.type == "Notes"} |
+	{Mask.type == "EarlierOrders"} |
+	{Mask.type == "Footnotes"} |
+	{Mask.type == "Text"} |
+	{Mask.type == "Signature"}
+)
+-->{}
+
+
+Rule: Make
+(
+	(
+		{Token.root == "make"}
+		{Token.string == "the"}
+		{Token.string == "following"}
+		(
+			{Token.root == "order"} |
+			{Token.root == "scheme"} |
+			{Token.root == "rules"} |
+			{Token.root == "regulations"} |
+			{Token.root == "Order"} |
+			{Token.root == "Scheme"} |
+			{Token.root == "Rules"} |
+			{Token.root == "Regulations"}
+		)
+	) |
+	(
+		{Token.string == "do"}
+		{Token.string == "hereby"}
+		{Token.string == "enact"}
+	) |
+	(
+		{Token.string == "order"}
+		({Token.string == ","})?
+		{Token.string == "as"}
+		{Token.string == "follows"}
+	)
+):annotation
+-->
+	:annotation.Make = {type = "Make"}
+
+
+Rule: Make2
+(
+	({Token.root == "make"}):annotation
+	(
+		(
+			{Token.string == "this"}
+			{Token.root == "order"}
+		) |
+		(
+			{Token.string == "these"}
+			{Token.root == "regulations"}
+		)
+	)
+)
+-->
+	:annotation.Make = {type = "Make"}
+
+Rule: Make2
+(
+	(
+		{Token.root == "order"} |
+		{Token.root == "scheme"} |
+		{Token.root == "rules"} |
+		{Token.root == "regulations"}
+	)
+	(
+		{Token.string == "are"}
+		{Token.string == "made"}
+		{Token.string == "by"}
+	):annotation
+)
+-->
+	:annotation.Make = {type = "Make"}

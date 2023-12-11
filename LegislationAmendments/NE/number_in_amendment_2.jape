@@ -1,0 +1,146 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: number_in_amendment_2
+Input: Token SpaceToken LegNumber LegPnumber LegRef LegTitle LegPblock
+Options: control = appelt
+
+/* These rules are about whether leading words in a BlockAmendment are represented in affected provision as 
+   "and cross-heading"
+   "and words"
+   "and word"
+   "and semi-colon"
+  ... or nothing
+*/
+
+Rule: main_title_pnumber
+(
+	{Token,!Token.blockAmendmentContext=~"."}
+	({SpaceToken})*
+	(
+		{LegTitle.blockAmendmentContext=="main",!LegTitle.inPblock=="true"}
+	):match 
+)
+-->
+:match.LegAmendmentModified={rule="main_title_pnumber"}
+// no text
+
+Rule: schedule_title
+(
+	{Token,!Token.blockAmendmentContext=~"."}
+	({SpaceToken})*
+	(
+		{LegTitle.blockAmendmentContext=="schedule"}
+	):match 
+)
+-->
+:match.LegAmendmentModified={affectedExtra="cross-heading"}
+// cross-heading
+
+
+Rule: pblock_title
+(
+	{Token,!Token.blockAmendmentContext=~"."}
+	({SpaceToken})*
+	(
+		(
+			{LegNumber.blockAmendmentContext=~".",LegNumber.inPblock=="true"}
+			({SpaceToken})*
+		)?
+		{LegTitle.blockAmendmentContext=~".",LegTitle.inPblock=="true"}
+	):match
+)
+-->
+:match.LegAmendmentModified={affectedExtra="cross-heading"}
+// cross-heading
+
+
+Rule: semicolon
+(
+	{Token,!Token.blockAmendmentContext=~"."}
+	({SpaceToken})*
+	(
+		{Token.string==";",Token.blockAmendmentContext=~".",!LegTitle,!LegPnumber,!LegNumber}
+		({SpaceToken})*
+	):match
+	(	{LegPnumber.blockAmendmentContext=~"."}|
+		{LegNumber.blockAmendmentContext=~"."}
+	)
+)
+-->
+:match.LegAmendmentModified={affectedExtra="semi-colon"}
+
+Rule: comma
+(
+	{Token,!Token.blockAmendmentContext=~"."}
+	({SpaceToken})*
+	(
+		{Token.string==",",Token.blockAmendmentContext=~".",!LegTitle,!LegPnumber,!LegNumber}
+		({SpaceToken})*
+	):match
+	(	{LegPnumber.blockAmendmentContext=~"."}|
+		{LegNumber.blockAmendmentContext=~"."}
+	)
+)
+-->
+:match.LegAmendmentModified={affectedExtra="comma"}
+
+// e.g. http://www.legislation.gov.uk/ukpga/2019/1/schedule/8/paragraph/3/2/b
+// Single word preceded by comma counts as word
+Rule: comma_and
+(
+	{Token,!Token.blockAmendmentContext=~"."}
+	({SpaceToken})*
+	(
+		{Token.string==",",Token.blockAmendmentContext=~".",!LegTitle,!LegPnumber,!LegNumber}
+		({SpaceToken})*
+		{Token.blockAmendmentContext=~".",!LegTitle,!LegPnumber,!LegNumber}
+		({SpaceToken})*
+	):match
+	(	{LegPnumber.blockAmendmentContext=~"."}|
+		{LegNumber.blockAmendmentContext=~"."}
+	)
+)
+-->
+:match.LegAmendmentModified={affectedExtra="word"}
+
+
+Rule: word
+(
+	{Token,!Token.blockAmendmentContext=~"."}
+	({SpaceToken})*
+	(
+		{Token.blockAmendmentContext=~".",!LegTitle,!LegPnumber,!LegNumber}
+		({SpaceToken})*
+	):match
+	(	{LegPnumber.blockAmendmentContext=~"."}|
+		{LegNumber.blockAmendmentContext=~"."}
+	)
+)
+-->
+:match.LegAmendmentModified={affectedExtra="word"}
+
+Rule: words
+(
+	{Token,!Token.blockAmendmentContext=~"."}
+	({SpaceToken})*
+	(
+		{Token.blockAmendmentContext=~".",!LegTitle,!LegPnumber,!LegNumber}
+		({SpaceToken})*
+		(
+			{Token.blockAmendmentContext=~".",!LegTitle,!LegPnumber,!LegNumber}
+			({SpaceToken})*
+		)+
+	):match
+	(	{LegPnumber.blockAmendmentContext=~"."}|
+		{LegNumber.blockAmendmentContext=~"."}
+	)
+)
+-->
+:match.LegAmendmentModified={affectedExtra="words"}

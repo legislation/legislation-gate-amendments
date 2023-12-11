@@ -1,0 +1,58 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_quote_2.jape
+* Author:	Stephen Cresswell
+* Description:	Annotation for quote without context, possibly containing a nested Quote1
+* Date created:	09/07/2018
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	LegislationQuote2
+Input:  Token Quote1 LegPnumber LegTableCell
+Options: control = appelt
+
+Rule: Quote2a
+(
+	{Token.string == "\u201C"}
+	(
+		{Token.string != "\u201C", Token.string != "\u201D", Token.string !="\"", !Quote1,!LegPnumber,!LegTableCell} 
+		|
+		{Quote1}
+	)+
+	{Token.string == "\u201D"}
+):quote
+-->
+	:quote.Quote = {rule = "Quote2a"}
+
+Rule: Quote2b
+(
+	{Token.string == "\""}
+	(
+		{Token.string != "\u201C", Token.string != "\u201D", Token.string !="\"", !Quote1,!LegPnumber,!LegTableCell} 
+		|
+		{Quote1}
+	)+
+	{Token.string == "\""}
+):quote
+-->
+	:quote.Quote = {rule = "Quote2b"}
+
+Rule: Quote2c
+({Quote1}):quote
+-->
+	:quote.Quote = {rule = "Quote2c"}

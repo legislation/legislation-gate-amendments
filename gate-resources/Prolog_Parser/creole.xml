@@ -1,0 +1,42 @@
+<!-- creole.xml Prolog Parser -->
+<!--  scresswell, 18/10/2018 -->
+
+<CREOLE-DIRECTORY>
+  <JAR SCAN="true">target\Prolog_Parser-1.0-SNAPSHOT.jar</JAR>
+  <!--
+	The location of temp files to/from Prolog
+	will be platform-specific default.
+	Can be over-ridden with DEFAULT attribute below
+	-->
+  <RESOURCE>
+    <CLASS>uk.co.tso.gate.prolog.Parser</CLASS>
+    <PARAMETER 
+      NAME="tempDir"
+      COMMENT="The location of temporary files to/from Prolog"
+      OPTIONAL="true"
+      RUNTIME="false">java.lang.String</PARAMETER>
+    <!-- 
+	  For debugging, it can be useful to preserve files 
+      passed to/from Prolog.  To do that, add:
+	  DEFAULT="true"
+    -->
+    <PARAMETER 
+      NAME="retainTempFiles"
+      COMMENT="Retain temporary files for debugging"
+      OPTIONAL="true"
+	  DEFAULT="true"
+      RUNTIME="true">java.lang.Boolean</PARAMETER>
+    <!-- 
+	  If not set, one of the following will be used
+        Windows - C:/Program Files/swipl/swipl.exe
+        Other -  /usr/bin/swipl	   
+	  To change, add DEFAULT attribute, e.g.:
+      DEFAULT="C:/Program Files/swipl/swopl.exe"
+    -->
+    <PARAMETER 
+      NAME="swiPrologExecutable"
+      COMMENT="The location of the SWI-Prolog executable"
+      OPTIONAL="true"
+      RUNTIME="false">java.lang.String</PARAMETER>
+  </RESOURCE>
+</CREOLE-DIRECTORY>

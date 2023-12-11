@@ -1,0 +1,33 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: legislation_legislation_3a
+Input: LegTitle Quote LegAmendment ExplanatoryNotes
+Options: control = all
+
+// Remove any Legislation where we don't want to see it
+
+Macro: REMOVE_ALL_WITHIN_MATCH
+:match
+{
+	AnnotationSet anns= (AnnotationSet)bindings.get("match");
+	for( Annotation ann : anns) {
+		//AnnotationSet containedAnns= outputAS.get("Legislation").getContained(ann.getStartNode().getOffset(),ann.getEndNode().getOffset());
+		AnnotationSet containedAnns= outputAS.getContained(ann.getStartNode().getOffset(),ann.getEndNode().getOffset());
+		for( Annotation containedAnn : containedAnns ) {
+			if(ann!=containedAnn) {
+				outputAS.remove(containedAnn);
+			}
+		}
+	}
+}
+
+Rule: Title            ({LegTitle}):match -->         REMOVE_ALL_WITHIN_MATCH
+Rule: Amendment        ({LegAmendment}):match -->     REMOVE_ALL_WITHIN_MATCH
+Rule: ExplanatoryNotes ({ExplanatoryNotes}):match --> REMOVE_ALL_WITHIN_MATCH

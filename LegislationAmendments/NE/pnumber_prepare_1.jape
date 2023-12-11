@@ -1,0 +1,83 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: Pnumber_prepare_1
+Input: Pnumber
+Options: control = appelt
+
+Rule: Level5in
+(
+   {Pnumber within {P5.inBlockAmendment=="true"}}
+):match
+-->
+:match.LegPnumber={level=5}
+
+Rule: Level5
+(
+   {Pnumber within {P5}, !Pnumber.inBlockAmendment=="true"}
+):match
+-->
+:match.LegPnumber={level=5}
+
+
+Rule: Level4in
+(
+   {Pnumber within {P4.inBlockAmendment=="true"}}
+):match
+-->
+:match.LegPnumber={level=4}
+
+Rule: Level4
+(
+   {Pnumber within {P4}, !Pnumber.inBlockAmendment=="true"}
+):match
+-->
+:match.LegPnumber={level=4}
+
+Rule: Level3in
+(
+   {Pnumber within {P3.inBlockAmendment=="true"}}
+):match
+-->
+:match.LegPnumber={level=3}
+
+Rule: Level3
+(
+   {Pnumber within {P3},!Pnumber.inBlockAmendment=="true"}
+):match
+-->
+:match.LegPnumber={level=3}
+
+Rule: Level2in
+(
+   {Pnumber within {P2.inBlockAmendment=="true"}}
+):match
+-->
+:match.LegPnumber={level=2}
+
+Rule: Level2
+(
+   {Pnumber within {P2},!Pnumber.inBlockAmendment=="true"}
+):match
+-->
+:match.LegPnumber={level=2}
+
+Rule: Level1in
+(
+   {Pnumber within {P1.inBlockAmendment=="true"}}
+):match
+-->
+:match.LegPnumber={level=1}
+
+Rule: Level1
+(
+   {Pnumber within {P1},!Pnumber.inBlockAmendment=="true"}
+):match
+-->
+:match.LegPnumber={level=1}

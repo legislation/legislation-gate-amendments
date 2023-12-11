@@ -1,0 +1,132 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_find_structure_phrases_3.jape
+* Author:	Paul Appleby
+* Description:	Find content that we want the parser to process for commencement items. This is basically looking for key phrases to select possible commencement candidates that are then parsed by a later stage to check if they are vaild items
+* Date created:	22/06/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	FindCommencement
+Input:  Quote LegAmendment Mask Token CrossRef LegTitle LegTitleBlock
+Options: control = appelt
+
+
+Rule: AvoidTransfer
+(
+	{LegAmendment} |
+	{Quote} |
+	{LegTitle} |
+	{LegTitleBlock} |
+	{Mask.type == "Notes"} |
+	{Mask.type == "EarlierOrders"} |
+	{Mask.type == "Footnotes"} |
+	{Mask.type == "Text"} |
+	{Mask.type == "Signature"}
+)
+-->{}
+
+
+/* For now we will annotate a 'large' structure, going up in size until we find something */
+Rule: InForce
+(
+	(
+		{Token.root == "come"}
+		(
+			{Token.string == "fully"}
+		)?
+		{Token.string == "into"}
+		(
+			{Token.string == "force"} |
+			{Token.string == "operation"}
+		)
+	) |
+	(
+		{Token.string == "has"}
+		{Token.string == "effect"}
+		{Token.string == "."}
+	) |
+	{CrossRef.type == "Cited"}	
+):annotation
+-->	
+{
+	HashSet<String> coveringList = new HashSet<String>();
+
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation legAnn = annotationSet.iterator().next();
+	Long legStart = legAnn.getStartNode().getOffset();
+	Long legEnd = legAnn.getEndNode().getOffset();
+	AnnotationSet coveringSet = inputAS.getCovering("", legStart, legEnd);
+	AnnotationSet p2Set = coveringSet.get("LegP2");
+	if (p2Set.size() > 0) {
+		Annotation coveringAnn = p2Set.iterator().next();
+		FeatureMap features = Factory.newFeatureMap();
+		features.put("type", "P2");
+		try {
+			outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "CommencementStructure", features);				
+		}
+		catch (Exception e) {
+			System.err.println("Commencement error: " + e.getMessage());
+		}
+	}
+	else {
+		AnnotationSet p1Set = coveringSet.get("LegP1");
+		if (p1Set.size() > 0) {
+			Annotation coveringAnn = p1Set.iterator().next();
+			FeatureMap features = Factory.newFeatureMap();
+			features.put("type", "P1");
+			try {
+				outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "CommencementStructure", features);				
+			}
+			catch (Exception e) {
+				System.err.println("Commencement error: " + e.getMessage());
+			}
+		}
+		else {
+			AnnotationSet pSet = coveringSet.get("LegP");
+			if (pSet.size() > 0) {
+				Annotation coveringAnn = pSet.iterator().next();
+				FeatureMap features = Factory.newFeatureMap();
+				features.put("type", "P");
+				try {
+					outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "CommencementStructure", features);				
+				}
+				catch (Exception e) {
+					System.err.println("Commencement error: " + e.getMessage());
+				}
+			}
+			else {
+				AnnotationSet p1groupSet = coveringSet.get("LegP1group");
+				if (p1groupSet.size() > 0) {
+					Annotation coveringAnn = p1groupSet.iterator().next();
+					FeatureMap features = Factory.newFeatureMap();
+					features.put("type", "P1group");
+					try {
+						outputAS.add(coveringAnn.getStartNode(), coveringAnn.getEndNode(), "CommencementStructure", features);				
+					}
+					catch (Exception e) {
+						System.err.println("Commencement error: " + e.getMessage());
+					}
+				}
+			}
+		}
+	}
+}
+
+
+

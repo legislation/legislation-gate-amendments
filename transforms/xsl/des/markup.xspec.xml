@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?oxygen RNGSchema="../../xspec/xspec.rnc" type="compact"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec" 
+	xmlns="http://www.legislation.gov.uk/namespaces/legislation"
+	xmlns:leg="http://www.legislation.gov.uk/namespaces/legislation"
+	xmlns:err="http://www.tso.co.uk/assets/namespace/error"
+	stylesheet="markup.xsl">
+	
+<x:scenario label="when marking up 2010 c. 32 sch. 2">
+	<x:context href="../../../tests/des/ukpga_2010_32_schedule_2.xml" />
+	
+	<x:expect label="it should turn gate:Legislation references into Citations" test="//leg:P1[@id = 'schedule-2-paragraph-1']/leg:P1para/leg:Text/leg:Citation">
+		<Citation id="c00003" Class="UnitedKingdomPublicGeneralAct" Year="1996" Number="56" URI="http://www.legislation.gov.uk/id/ukpga/1996/56">EA 1996</Citation>
+	</x:expect>
+	
+	<x:scenario label="when processing gate:LegRef elements">
+	
+		<x:expect label="it should turn gate:LegRef references into CitationSubRef elements" test="//leg:P1[@id = 'schedule-2-paragraph-2']/leg:P1para/leg:Text/leg:CitationSubRef">
+			<CitationSubRef id="c00004" CitationRef="c00003" SectionRef="section-337-b" URI="http://www.legislation.gov.uk/id/ukpga/1996/56/section/337/b">section 337(b)</CitationSubRef>
+		</x:expect>
+		
+		<x:expect label="nested ones should incorporate the SectionRef of the parent"
+			 test="//leg:P1[@id = 'schedule-2-paragraph-12']/leg:P1para/leg:Text/leg:CitationSubRef">
+			<CitationSubRef id="c00020" CitationRef="c00019" SectionRef="section-65" URI="http://www.legislation.gov.uk/id/ukpga/2002/32/section/65">section 65</CitationSubRef>
+			<CitationSubRef id="c00021" CitationRef="c00020" SectionRef="section-65-2" URI="http://www.legislation.gov.uk/id/ukpga/2002/32/section/65/2">subsection (2)</CitationSubRef>
+		</x:expect>
+		
+	</x:scenario>
+	
+	<x:scenario label="when processing gate:Action elements">
+		
+		<x:expect label="it should turn gate:Action references into Effect elements" test="//leg:P1[@id = 'schedule-2-paragraph-2']/leg:P1para/leg:Text/leg:Effect">
+			<Effect id="e00002">insert</Effect>
+		</x:expect>
+		
+	</x:scenario>
+</x:scenario>
+
+
+</x:description>

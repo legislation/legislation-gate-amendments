@@ -1,0 +1,101 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_mask_items.jape
+* Author:	Paul Appleby
+* Description:	Annotations for markup from the legislation we want to ignore
+* Date created:	23/02/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	Mask
+Input:  Title Reference Number Metadata ExplanatoryNotes Footnotes P SignedSection EarlierOrders Tabular
+Options: control = appelt negationGrouping = false
+
+Rule: Metadata
+(
+	{Metadata}
+):annotation
+-->
+	:annotation.Mask = {type = "Metadata"}
+
+
+Rule: Title
+(
+	{Title}
+):annotation
+-->
+	:annotation.Mask = {type = "Title"}
+
+
+Rule: Reference
+(
+	{Reference}
+):annotation
+-->
+	:annotation.Mask = {type = "Reference"}
+
+
+Rule: Number
+(
+	{Number}
+):annotation
+-->
+	:annotation.Mask = {type = "Number"}
+
+Rule: P
+(
+	{P, !P within SecondaryPreamble, !P within Schedule}
+):annotation
+-->
+	:annotation.Mask = {type = "P"}
+
+Rule: Tabular
+(
+	{Tabular}
+):annotation
+-->
+	:annotation.Mask = {type = "Tabular"}
+
+Rule: Notes
+(
+	{ExplanatoryNotes}
+):annotation
+-->
+	:annotation.Mask = {type = "Notes"}
+
+Rule: EalierOrders
+(
+	{EarlierOrders}
+):annotation
+-->
+	:annotation.Mask = {type = "EarlierOrders"}
+
+Rule: Footnotes
+(
+	{Footnotes}
+):annotation
+-->
+	:annotation.Mask = {type = "Footnotes"}
+
+Rule: SignedSection
+(
+	{SignedSection}
+):annotation
+-->
+	:annotation.Mask = {type = "Signature"}
+

@@ -1,0 +1,58 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_restore_items_from_mask.jape
+* Author:	Paul Appleby
+* Description:	Restore certain annotations that get removed by masking
+* Date created:	20/10/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	RestoreFromMask
+Input:  StoreLegislation StoreLegRef StoreQuote StoreLocation StoreAction StoreLegAmendment Legislation StoreDate StoreAction StoreCrossRef StoreLegPnumber StoreAnaphor StoreExtendTo StoreExtentCountries StoreNonTextualPhrase
+Options: control = appelt
+
+
+Rule: Store
+(
+	{StoreLegislation, !Legislation} |
+	{StoreLegRef} |
+	{StoreQuote} |
+	{StoreLocation} |
+	{StoreDate} |
+	{StoreAction} |
+	{StoreCrossRef} | 
+	{StoreLegPnumber} | 
+	{StoreAnaphor} | 
+	{StoreLegAmendment} |
+	{StoreNonTextualPhrase} |
+	{StoreExtendTo} |
+	{StoreExtentCountries}
+):annotation
+-->
+{
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation itemAnn = annotationSet.iterator().next();
+	try {
+		outputAS.add(itemAnn.getStartNode().getOffset(), itemAnn.getEndNode().getOffset(),
+			itemAnn.getType().substring(5), itemAnn.getFeatures());
+	}
+	catch (Exception e) {
+		System.err.println("Could not restore annotation: " + e.getMessage());
+	}
+
+}

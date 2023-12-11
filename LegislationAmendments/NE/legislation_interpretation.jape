@@ -1,0 +1,85 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_interpretation.jape
+* Author:	Paul Appleby
+* Description:	Annotations for interpretation
+* Date created:	15/02/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+
+Phase:	Interpretation
+Input:  Token Quote Legislation LegRef Mask
+Options: control = appelt
+
+Rule: AvoidInterpretation
+(
+	{Mask.type == "Notes"}
+)
+-->{}
+
+Rule: ActDefinition
+(
+	{Quote}
+	(
+		{Token.string == "("}
+		(
+			{Token.string != ")"}
+		)+
+		{Token.string == ")"}
+	)?
+	{Token.string == "means"}
+	({Token.string == "the"})?
+	({Legislation}):legislation
+):interpretation
+-->
+	:interpretation.Interpretation = {format = "Legislation", type = :legislation.Legislation.type, context = :legislation.Legislation.context}
+
+Rule: DetailedActDefinition
+(
+	{Quote}
+	{Token.string == "means"}
+	{Token.string == "the"}
+	(
+		{Token.category == JJ} |
+		{Token.category == NNP} |
+		{Token.category == NNPS}
+	)[1,5]
+	{Token.string == "in"}
+	{LegRef}
+	{Token.string == "to"}
+	{Token.string == "the"}
+	({Legislation}):legislation
+):interpretation
+-->
+	:interpretation.Interpretation = {format = "Legislation", type = :legislation.Legislation.type, context = :legislation.Legislation.context}
+
+
+Rule: InlineLegislationnDefinition
+(
+	({Legislation}):legislation
+	{Token.string == "("}	
+	(
+		{Quote within LegEnactingText} |
+		{Quote within LegBodyBlock} |
+		{Quote within LegScheduleBlock}
+	)
+	{Token.string == ")"}
+):interpretation
+-->
+	:interpretation.Interpretation = {format = "Legislation", type = :legislation.Legislation.type, context = :legislation.Legislation.context}
+

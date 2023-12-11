@@ -1,0 +1,61 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_amendment_location_2.jape
+* Author:	Paul Appleby
+* Description:	Identify more location annotations
+* Date created:	15/03/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Locations2
+Input:  Token LegRef Location Action
+Options: control = appelt
+
+Rule: Avoid
+(
+	{Location}
+)
+--> {}
+
+
+Rule: TableAfterRef
+(
+	(
+		{Token.string == "the"}
+		{Token.root == "table"}
+	):table
+	{Token.string == "following"}
+	{LegRef}
+)
+-->
+	:table.Location = {type = "Table", position = "Following"}
+
+
+Rule: AndLegRef
+(
+	({Token.string=="and"}):match
+	{LegRef}
+)
+-->
+:match.Location={type="And"}
+
+Rule: LegRefAnd
+(
+	{LegRef}
+	({Token.string=="and"}):match
+)
+-->
+:match.Location={type="And"}

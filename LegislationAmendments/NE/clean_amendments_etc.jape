@@ -1,0 +1,55 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+
+Phase: clean_amendments_etc
+Input: LegAmendment Title Reference Number Quote brackettedPhrase RelatedLegislation ExplanatoryNotes Legislation LegTableBody IrrelevantReference
+Options: control = all
+
+// Where we find block amendments or quotes in input AnnotationSet,
+// remove all contained annotations from output AnnotationSet.
+// Note that the containing and contained annotation are in different AnnotationSets.
+       
+Macro: REMOVE_ALL_WITHIN_MATCH
+:match
+{
+	AnnotationSet anns= (AnnotationSet)bindings.get("match");
+	for( Annotation ann : anns) {
+		AnnotationSet containedAnns= outputAS.getContained(ann.getStartNode().getOffset(),ann.getEndNode().getOffset());
+		for( Annotation containedAnn : containedAnns ) {
+			if(ann!=containedAnn) {
+				outputAS.remove(containedAnn);
+			}
+		}
+	}
+}
+
+
+Macro: REMOVE_ALL_WITHIN_MATCH_AND_THIS
+:match
+{
+	AnnotationSet anns= (AnnotationSet)bindings.get("match");
+	for( Annotation ann : anns) {
+		AnnotationSet containedAnns= outputAS.getContained(ann.getStartNode().getOffset(),ann.getEndNode().getOffset());
+		for( Annotation containedAnn : containedAnns ) {
+			outputAS.remove(containedAnn);
+		}
+	}
+}
+
+Rule: amendment ({LegAmendment}):match --> REMOVE_ALL_WITHIN_MATCH
+Rule: title     ({Title}):match -->     REMOVE_ALL_WITHIN_MATCH_AND_THIS
+Rule: reference ({Reference}):match -->     REMOVE_ALL_WITHIN_MATCH_AND_THIS // That's another kind of title
+Rule: number    ({Number}):match -->     REMOVE_ALL_WITHIN_MATCH_AND_THIS
+Rule: quote     ({Quote}):match -->        REMOVE_ALL_WITHIN_MATCH
+Rule: relatedleg       ({RelatedLegislation}):match --> REMOVE_ALL_WITHIN_MATCH
+Rule: brackettedPhrase ({brackettedPhrase}):match --> REMOVE_ALL_WITHIN_MATCH_AND_THIS
+Rule: ens ({ExplanatoryNotes}):match --> REMOVE_ALL_WITHIN_MATCH_AND_THIS
+Rule: leg ({Legislation}):match --> REMOVE_ALL_WITHIN_MATCH
+Rule: table ({LegTableBody}):match --> REMOVE_ALL_WITHIN_MATCH
+Rule: irrelevantref ({IrrelevantReference}):match --> REMOVE_ALL_WITHIN_MATCH

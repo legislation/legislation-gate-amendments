@@ -1,0 +1,325 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_amendment_anaphor.jape
+* Author:	Paul Appleby
+* Description:	Identify anaphoric expressions
+* Date created:	05/04/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Anaphor
+Input:  Token LegRef CrossRef
+Options: control = appelt
+
+
+Rule: LegislationAnaphor
+(
+	(
+		(
+			{Token.string == "of"}
+			{Token.string == "that"}
+		) |
+		(
+			{Token.string == "of"}
+			{Token.string == "the"}
+			{Token.string == "said"}
+		) |
+		(
+			{Token.string == "in"}
+			{Token.string == "that"}
+		) |
+		(
+			{Token.string == "to"}
+			{Token.string == "that"}
+		) |
+		(
+			{Token.string == "this"}
+		)
+	)
+	{Token.string == "Act"}
+):legislation
+-->
+	:legislation.Anaphor = {type = "Legislation"}
+
+
+Rule: LegislationAnaphorRepealsRevocations
+(
+	(
+		{Token.root == "the"}
+		{Token.string == "whole"}
+		{Token.string == "Act"}
+	) |
+	(
+		{Token.root == "the"}
+		(
+			{Token.string == "entire"} |
+			(
+				{Token.string == "whole"}
+				(
+					{Token.string == "of"}
+					{Token.string == "the"}
+				)?
+			)
+		)
+		(
+			{Token.string == "Regulations"} |
+			{Token.string == "Order"} |
+			{Token.string == "Rules"}
+		)
+	)
+):legislation
+-->
+	:legislation.Anaphor = {type = "WholeLegislation"}
+
+
+Rule: AfterEntryAnaphor
+(
+	({Token.string == "and"})?:actionKiller
+	(
+		{Token.root == "after"}
+		{Token.string == "that"}
+		{Token.string == "entry"}
+	):entry
+)
+-->
+	:entry.Anaphor = {type = "Entry", subType = "Following"},
+	:actionKiller.StopConjunction = {type = "Action"}
+
+
+Rule: BeforeEntryAnaphor
+(
+	({Token.string == "and"})?:actionKiller
+	(
+		{Token.root == "before"}
+		{Token.string == "that"}
+		{Token.string == "entry"}
+	):entry
+)
+-->
+	:entry.Anaphor = {type = "Entry", subType = "Preceding"},
+	:actionKiller.StopConjunction = {type = "Action"}
+
+
+Rule: AfterRefAnaphor
+(
+	(
+		{Token.root == "after"}
+		{Token.string == "that"}
+		(
+			{LegRef} |
+			{Token.string == "Schedule"} |
+			{Token.string == "provision"} |
+			{Token.string == "section"} |
+			{Token.string == "subsection"} |
+			{Token.string == "paragraph"} |
+			{Token.string == "sub-paragraph"} |
+			{Token.string == "subparagraph"}
+		)
+	)
+):ref
+-->
+	:ref.Anaphor = {type = "Ref", subType = "Following"}
+
+
+Rule: AfterDefinitionAnaphor
+(
+	({Token.string == "and"})?:actionKiller
+	(
+		{Token.root == "after"}
+		{Token.string == "that"}
+		{Token.string == "definition"}
+	):definition
+)
+-->
+	:definition.Anaphor = {type = "Definition", subType = "Following"},
+	:actionKiller.StopConjunction = {type = "Action"}
+
+Rule: ExistingTextAnaphor
+(
+	(
+		{Token.root == "the"}
+		{Token.string == "existing"}
+		{Token.string == "text"}
+	):text
+	({Token.string == "becomes"}):becomes
+)
+-->
+	:text.Anaphor = {type = "ExistingText"},
+	:becomes.Action = {type = "Becomes"}
+
+
+Rule: ExistingRefAnaphor
+(
+	(
+		{Token.root == "the"}
+		{Token.string == "existing"}
+		(
+			{Token.string == "provision"} |
+			{Token.string == "section"} |
+			{Token.string == "subsection"} |
+			{Token.string == "paragraph"} |
+			{Token.string == "sub-paragraph"} |
+			{Token.string == "subparagraph"}
+		)
+	):ref
+	({Token.string == "becomes"}):becomes
+)
+-->
+	:ref.Anaphor = {type = "ExistingRef"},
+	:becomes.Action = {type = "Becomes"}
+
+Rule: RelevantRefAnaphor
+(
+	(
+		{Token.root == "the"}
+		{Token.string == "relevant"}
+		(
+			{Token.string == "provisions"} |
+			{Token.string == "sections"} |
+			{Token.string == "subsections"} |
+			{Token.string == "paragraphs"} |
+			{Token.string == "sub-paragraphs"} |
+			{Token.string == "subparagraphs"}
+		)
+	)
+):ref
+-->
+	:ref.Anaphor = {type = "RelevantRef"}
+
+Rule: AllRelevantRefAnaphor
+(
+	{Token.root == "all"}
+	{Token.root == "the"}
+	{Token.string == "provisions"}
+	{Token.string == "are"}
+	{Token.string == "relevant"}
+	{Token.string == "provisions"}
+):ref
+-->
+	:ref.Anaphor = {type = "AllRelevantRef"}
+
+
+Rule: OtherRefAnaphor
+(
+	{Token.root == "the"}
+	{Token.root == "other"}
+	{Token.string == "provisions"}
+):ref
+-->
+	:ref.Anaphor = {type = "OtherRef"}
+
+
+Rule: OfRefAnaphor
+(
+	{Token.string == "of"}
+	(
+		{Token.string == "that"}
+		(
+			{Token.string == "section"} |
+			{Token.string == "paragraph"}
+		)
+	):ref
+)
+-->
+	:ref.Anaphor = {type = "Ref", subType = "Of"}
+
+
+Rule: InRefAnaphor
+(
+	{Token.root == "in"}
+	{Token.string == "that"}
+	(
+		{Token.string == "sub-paragraph"} |
+		{Token.string == "paragraph"} |
+		{Token.string == "Schedule"}
+	)
+):ref
+-->
+	:ref.Anaphor = {type = "Ref", subType = "In"}
+
+
+Rule: InTableAnaphor
+(
+	{Token.root == "in"}
+	{Token.string == "that"}
+	(
+		{Token.string == "table"} |
+		{Token.string == "Table"}
+	)
+):ref
+-->
+	:ref.Anaphor = {type = "Table", subType = "In"}
+
+
+Rule: ThisGroupAnaphor
+(
+	{Token.root == "this"}
+	{Token.string == "Part"}
+):ref
+-->
+	:ref.Anaphor = {type = "Ref", subType = "ThisPart"}
+
+
+Rule: ThisLegislationAnaphor
+(
+	{Token.root == "this"}
+	{Token.string == "Order"}
+	(
+		{Token.string == "in"}
+		{Token.string == "Council"}
+	)?
+):ref
+-->
+	:ref.Anaphor = {type = "Ref", subType = "ThisLegislation"}
+
+
+Rule: ThisLegislationAnaphor2
+(
+	{Token.root == "these"}
+	{Token.string == "Regulations"}
+):ref
+-->
+	:ref.Anaphor = {type = "Ref", subType = "ThisLegislation"}
+
+
+Rule: ThisArticleAnaphor
+(
+	{Token.root == "this"}
+	{Token.string == "article"}
+):ref
+-->
+	:ref.Anaphor = {type = "Ref", subType = "ThisArticle"}
+
+
+Rule: WordsAnaphor
+(
+	{Token.root == "the"}
+	{Token.string == "current"}
+	{Token.string == "words"}
+):ref
+-->
+	:ref.Anaphor = {type = "Words"}
+
+Rule: ForWordsAnaphor
+(
+	({Token.root == "for"}):location
+	(
+		{Token.string == "those"}
+		{Token.string == "words"}
+	):ref
+)
+-->
+	:ref.Anaphor = {type = "Words"}

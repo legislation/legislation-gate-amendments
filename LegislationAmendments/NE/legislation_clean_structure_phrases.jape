@@ -1,0 +1,127 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*
+* Filename: 	legislation_clean_struture_phrases.jape
+* Author:	Paul Appleby
+* Description:	Remove unwanted content that we don't want the parser to process
+* Date created:	22/06/2011
+* This version:	0.1
+* 
+* 
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	CleanStructures
+Input:  ExtentStructure NonTextualStructure EnablingPowerStructure CommencementStructure LongDistanceCommencementStructure LegTableBody LegTableRow
+Options: control = appelt
+
+
+/* Due to the nature of identifying key phrases and the marking the surrounding structure this can lead to nesting where more than one key phrase lies within the structure.
+
+So here we remove any nesting.
+
+And also do some sub-level identification of structures
+
+*/
+
+Rule: RemoveNestedNonTextuals
+(
+	{NonTextualStructure}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("NonTextualStructure");
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation ntAnn = annotationSet.iterator().next();
+	Long ntStart = ntAnn.getStartNode().getOffset();
+	Long ntEnd = ntAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = outputAS.getContained(ntStart, ntEnd);
+	AnnotationSet nestedNtSet = nestedSet.get(coveringList);
+	// Remove any NTs that are not this one matched in rule
+	for (Annotation candidateAnn : nestedNtSet) {
+		//System.out.println("Testing annotations for NT");
+		if (candidateAnn != ntAnn) outputAS.remove(candidateAnn);
+	}
+}
+
+
+Rule: RemoveNestedEnablingPowers
+(
+	{EnablingPowerStructure}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("EnablingPowerStructure");
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation epAnn = annotationSet.iterator().next();
+	Long epStart = epAnn.getStartNode().getOffset();
+	Long epEnd = epAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = outputAS.getContained(epStart, epEnd);
+	AnnotationSet nestedEpSet = nestedSet.get(coveringList);
+	for (Annotation candidateAnn : nestedEpSet) {
+		if (candidateAnn != epAnn) outputAS.remove(candidateAnn);
+	}
+}
+
+
+
+
+Rule: RemoveNestedCommencements
+(
+	{CommencementStructure}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("CommencementStructure");
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation commencementAnn = annotationSet.iterator().next();
+	Long commencementStart = commencementAnn.getStartNode().getOffset();
+	Long commencementEnd = commencementAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = outputAS.getContained(commencementStart, commencementEnd);
+	AnnotationSet nestedCommencementSet = nestedSet.get(coveringList);
+	for (Annotation candidateAnn : nestedCommencementSet) {
+		if (candidateAnn != commencementAnn) outputAS.remove(candidateAnn);
+	}
+}
+
+
+Rule: IdentifySubLevelLDcommencements
+(
+	{LegTableRow within LegTableBody , LegTableRow within LongDistanceCommencementStructure}
+):structure
+-->
+	:structure.LongDistanceCommencementTableStructure = {}
+
+
+
+Rule: RemoveNestedExtents
+(
+	{ExtentStructure}
+):annotation
+-->
+{
+	HashSet<String> coveringList = new HashSet<String>();
+	coveringList.add("ExtentStructure");
+	AnnotationSet annotationSet = bindings.get("annotation");
+	Annotation extentAnn = annotationSet.iterator().next();
+	Long extentStart = extentAnn.getStartNode().getOffset();
+	Long extentEnd = extentAnn.getEndNode().getOffset();
+	AnnotationSet nestedSet = outputAS.getContained(extentStart, extentEnd);
+	AnnotationSet nestedExtentSet = nestedSet.get(coveringList);
+	for (Annotation candidateAnn : nestedExtentSet) {
+		if (candidateAnn != extentAnn) outputAS.remove(candidateAnn);
+	}
+}

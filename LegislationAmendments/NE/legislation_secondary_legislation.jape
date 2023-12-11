@@ -1,0 +1,155 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_secondary_legislation.jape
+* Author:	Paul Appleby
+* Description:	Extract secondary legislation references from text and normalize ready for flexible matching
+* Date created:	07/04/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	SecondaryLegislation
+Input:  Lookup Token Legislation Split LegisStart Quote
+Options: control = appelt
+
+Rule: AvoidSecondary
+Priority: 10
+(
+	{Legislation.type == "uksi"}
+)
+-->{}
+
+Rule: SecondaryLegislation
+(
+	(
+		{Token.string == "The"}	|
+		{Token.string == "THE"} |
+		{LegisStart}
+	)
+	(
+		(
+			{Token.string == ","} |
+			{Token.string == "-"} |			
+			(
+				{Token.root == "etc"}
+				({Token.root == "."})?
+			) |
+			{Token.category == CC} |
+			{Token.category == CD} |
+			{Token.category == DT} |
+			{Token.category == NN, Token.string != "\u201C", Token.string != "\u201D", !Token.orth == lowercase} |
+			{Token.category == NNS} |
+			(
+				{Token.category == NNP}
+				(
+					{Token.string == "\u2019"}
+					(
+						{Token.category == VBZ} |
+						{Token.category == NNP}
+					)
+				)?
+			) |
+			{Token.category == NNPS} |
+			{Token.category == VB} |
+			{Token.category == VBD} |
+			{Token.category == JJ} |
+			{Token.category == TO} |
+			{Token.category == IN}
+		) |
+		(
+			{Token.string == "("}
+			(
+				{Token.string != ")", Token.string != "\u201C", Token.string != "\u201D"}
+			)+
+			{Token.string == ")"}
+		)		
+	)+
+	(
+		{Token.root == "order"} |
+		{Token.root == "scheme"} |
+		{Token.string == "regulations"} |
+		{Token.string == "Regulations"} |
+		{Token.string == "REGULATIONS"} |
+		{Token.string == "rules"} |
+		{Token.string == "Rules"} |
+		{Token.string == "RULES"}
+	)
+	(
+		{Token.string == "("}
+		(
+			{Token.root == "no"}
+			({Token.string == "."})?
+			{Token.kind == number}
+		)+
+		{Token.string == ")"}
+	)?
+	(
+		{Token.root == "order"}
+		{Token.root == "of"}
+		{Token.root == "council"}
+	)?
+	(
+		{Token.string == "("}
+		(
+			{Token.root == "northern"}
+			{Token.root == "ireland"}
+		)+
+		{Token.string == ")"}
+	)?
+	{Token.category == CD, Token.length == 4}
+):secondlegis
+-->
+{
+	AnnotationSet legisSet = bindings.get("secondlegis");
+
+	// Get text covering entire annotation
+	Long startOffset = legisSet.firstNode().getOffset();
+	Long endOffset = legisSet.lastNode().getOffset();
+
+	// Remove any legislation embedded in the new legislation	
+	AnnotationSet legisExistSet = inputAS.get("Legislation", startOffset, endOffset);
+	outputAS.removeAll(legisExistSet);
+	
+	String annText = "";
+	try {
+		annText = doc.getContent().getContent(startOffset, endOffset).toString();
+	}
+	catch (Exception e) {
+	}
+
+	// Now normalize text
+	annText = annText.replaceAll("[(),.'-]", "");
+	annText = annText.replaceAll("\u2019", "");
+	annText = annText.replaceAll(" ", "");
+	
+	gate.FeatureMap features = Factory.newFeatureMap();
+	features.put("normalText", annText);
+	features.put("type", "secondary");
+	features.put("rule", "SecondaryLegislation");
+	outputAS.add(legisSet.firstNode(), legisSet.lastNode(), "TempLegislation", features);	
+
+	AnnotationSet containedSet= inputAS.getContained(startOffset,endOffset).get("Token");
+	//System.out.println(startOffset+" "+endOffset+" "+containedSet.size());
+	for(Annotation ann : containedSet) {
+		String text= ((String)ann.getFeatures().get("string")).replaceAll("[(),.'-]", " ").replaceAll("\u2019", " ").replaceAll("s\\b",""); //.replaceAll(" ", "");
+		//System.out.println(ann.getType()+" "+text);
+		//if(!text.isEmpty()) {
+		//if(!text.matches("^ +$")) {
+		    // Avoid adding feature for empty tokens - stops trailing comma getting included
+			ann.getFeatures().put("normalText",text);
+		//}
+	}
+	//System.out.println();
+}

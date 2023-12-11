@@ -1,0 +1,56 @@
+/*
+(c) Crown copyright
+
+You may use and re-use the code in this repository free of charge under the terms of the Open Government Licence
+
+http://www.nationalarchives.gov.uk/doc/open-government-licence/version/2
+
+*/
+/*  
+* Filename: 	legislation_chronology.jape
+* Author:	Paul Appleby
+* Description:	Identify time relative phrases
+* Date created:	15/03/2011
+* This version:	0.1
+*
+* Change history
+* ==========================================================================
+* Date		Version		Author		Description
+* ==========================================================================
+* 
+*/
+
+Phase:	Chronology
+Input:  Token Legislation Location Anaphor
+Options: control = appelt
+
+Rule: AfterCommencement
+(
+	{Token.string == "after"}
+	{Token.string == "the"}
+	{Token.string == "commencement"}	
+):time
+-->
+	:time.Chronology = {type = "Commencement"}
+
+Rule: Citation
+(
+	{Token.string == "may"}
+	{Token.string == "be"}
+	{Token.string == "cited"}
+):annotation
+-->
+	:annotation.CrossRef = {type = "Cited"}
+	
+Rule: Citation2
+(
+	(
+		{Token.root == "the"}
+		{Token.string == "title"}
+		{Token.string == "of"}
+	):annotation
+	{Anaphor}
+	{Token.string == "is"}
+)
+-->
+	:annotation.CrossRef = {type = "Cited"}	
