@@ -104,6 +104,8 @@ For further information about GATE, please refer to the GATE website at
 
 		![](pc4_ParametersForTheNewGateDocument.png)
 
+		If you want an example document to use, you can try https://www.legislation.gov.uk/ukpga/2023/57/enacted/data.xml (you can try pasting the URL directly into the **sourceURL** field, but you may need to download it using a browser and then open the file instead).
+
 4. Add the document to a corpus.  
 
 	* The pipeline runs on a corpus of documents (even when processing a single document), so it's necessary to create a corpus to contain this document.  This is done by right-clicking on the document, and selecting **New Corpus with this Document**.
