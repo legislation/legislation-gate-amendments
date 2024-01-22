@@ -15,7 +15,7 @@ The National Archives run this pipeline within a purpose-built Data Enrichment S
 ### Software dependencies ###
 
 * The GATE Developer environment, available from [https://gate.ac.uk/download](https://gate.ac.uk/download). 
-	* This package has been tested with GATE 8.2 and GATE 8.6.1.
+	* This package has been tested with GATE 8.2, GATE 8.6.1 and GATE 9.0.1.
   * **Note:** GATE 8.5 and onwards use an online plugin repository instead of bundling plugins, and so **the format of .gapp files has changed.** The default version of the application (`legislation-amendments.gapp`) uses the new format. If you are using GATE 8.2–8.4, make sure to use the `legislation-amendments-pre-gate-8.5.gapp` application file instead.
 * A Java JDK, version 8 or later. You can download a free, open licensed JDK at [https://openjdk.java.net/](https://openjdk.java.net/).
 * SWI-Prolog 7.7.25 or later, available at [https://www.swi-prolog.org/Download.html](https://www.swi-prolog.org/Download.html).
@@ -33,16 +33,14 @@ The National Archives run this pipeline within a purpose-built Data Enrichment S
 				(sample Java app that embeds the pipeline using GATE Embedded)
 			gate-resources/
 				(bespoke plugins here)
-			java-lib/
-				(Required Java EE libraries that are missing in newer JDKs)
-			plugins/
-				(GATE bundled plugins here)
 			LegislationAmendments/
 				legislation-amendments.gapp
 				gazetteer/
 					(legislation gazetteers here)
 				NE/
 					(JAPE rules here)
+			transforms/
+				(various transforms to different output formats here)
 	```
 	* **Note: If you are using Windows and you extract the package to a network drive or share, GATE may fail to load the application.** We recommend that you extract the package to a folder on a local disk instead.
 	* If you must save the package onto a network drive or share, you can manually edit the `legislation-amendments.gapp` file to point towards the correct location:
@@ -51,14 +49,18 @@ The National Archives run this pipeline within a purpose-built Data Enrichment S
 		3. Save the file.
 	* This problem appears to result from how GATE handles Windows UNC paths and should not occur on macOS or Linux/UNIX systems.
 
-2. Download and install GATE. We recommend installing GATE 8.6.1 or newer.
+2. Acquire the Prolog Parser GATE plugin. There are two ways to do this:
+
+  	* **Method 1:** Download the JAR files for the Prolog Parser plugin from our [releases page on Github](https://github.com/legislation/gate-legislation-amendments/releases) (there should be two files, one called `Prolog_Parser-1.0-SNAPSHOT.jar` and the other called `Prolog_Parser-1.0-SNAPSHOT-creole.jar`). Place both these files in a subfolder called `gate-resources/Prolog_Parser/target/` within the top-level folder of this distribution. If the `target/` subfolder does not exist within `Prolog_Parser/`, you must create it.
+  	* **Method 2:** Build the plugin from source using the Maven project in the `gate-resources/Prolog_Parser/` subfolder. You will need a Java compiler and Maven to build the plugin.
+
+3. Download and install GATE. We recommend installing GATE 9.0.1 or newer.
 	* **Note:** GATE appears to have bugs that affect its performance on newer macOS systems. In particular, the Resource Features pane (that shows additional metadata relating to a processed document) does not work reliably, so you may struggle to extract the Effects data if you run GATE on macOS. However, most other features appear to work correctly.
 	* After installation, you will likely need to change some files in the GATE Developer installation directory for it to work properly. Browse to that directory (on Windows, this is usually `C:\Program Files (x86)\GATE_Developer_8.x.x` where x.x is the version number you installed; on macOS/Linux/UNIX, the location will vary)
 	  * We recommend increasing the amount of RAM available to GATE for optimum performance. If you have at least 4GB of RAM, open `gate.l4j.ini` in a text editor and add on a new line the text `-Xmx2G`. (If you have more than 4GB of RAM, increase the `2` to half of the RAM available in your system.) This will allow GATE to use more RAM, which will mean that it will both run faster and run out of memory less often.
-	  * Newer releases of Java no longer contain the Java EE libraries, some of which GATE requires to function. You will see `java.lang.NoClassDefFoundError` errors in the Messages pane of GATE if these libraries are missing. To avoid this, we recommend that you copy the files from the `java-lib` directory of this package to the `lib` directory in your GATE installation directory.
 
-3. Download and install SWI-Prolog.
-	* **Note:** The GATE package will look for SWI-Prolog at `C:/Program Files/swipl/bin/swipl.exe` (on Windows) or `/usr/bin/swipl` (on macOS/Linux/UNIX). If you have installed SWI-Prolog elsewhere, you will need to change the path in the Prolog Parser component's creole.xml file.
+4. Download and install SWI-Prolog.
+	* **Note:** The GATE package will look for SWI-Prolog at `C:/Program Files/swipl/bin/swipl.exe` (on Windows) or `/usr/local/bin/swipl` (on macOS/Linux/UNIX). If you have installed SWI-Prolog elsewhere, you will need to change the path in the Prolog Parser component's creole.xml file.
 	* To specify a new path to SWI-Prolog, open `LegislationAmendments/gate-resources/Prolog_Parser/creole.xml` with a text editor and add the path to the SWI-Prolog interpreter in the `DEFAULT` attribute of the `swiPrologExecutable` parameter:
 ```xml
 <!-- change "C:/path/to/swipl/bin/swipl.exe" to the SWI-Prolog path on your system -->
