@@ -178,9 +178,9 @@ To export the marked-up document with the annotations in the list above from wit
 
 ## Running the pipeline in an embedded GATE instance ##
 
-You can use the GATE Embedded library to build a Java application or library that embeds a GATE pipeline. A simple example program that uses GATE Embedded to embed the Legislation Amendments application is available in the `LegislationAmendments/embedded/` directory.  
+You can use the GATE Embedded library to build a Java application or library that embeds a GATE pipeline. A simple example program that uses GATE Embedded to embed the Legislation Amendments application is available in the `embedded/` directory.  
 
 ## Further details ##
 
-* Further details of the processing steps are provided in the separate document **“Details of the TNA eMarkup Process”**.
-* A supplementary spreadsheet mapping the dependencies between annotation sets and between annotations is provided in the file **AnnotationSets.xslx**.
+* Further details of the processing steps are provided in the [technical overview](overview.md).
+* A supplementary spreadsheet mapping the dependencies between annotation sets and between annotations is provided in the file [AnnotationSetsV2.xlsx](AnnotationSetsV2.xlsx).
