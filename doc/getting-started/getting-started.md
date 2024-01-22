@@ -183,4 +183,4 @@ You can use the GATE Embedded library to build a Java application or library tha
 ## Further details ##
 
 * Further details of the processing steps are provided in the [technical overview](/doc/overview.md).
-* A supplementary spreadsheet mapping the dependencies between annotation sets and between annotations is provided in the file [AnnotationSetsV2.xlsx](/dpc/AnnotationSetsV2.xlsx).
+* A supplementary spreadsheet mapping the dependencies between annotation sets and between annotations is provided in the file [AnnotationSetsV2.xlsx](/doc/AnnotationSetsV2.xlsx).
