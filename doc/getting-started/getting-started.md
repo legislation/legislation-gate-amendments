@@ -16,7 +16,7 @@ The National Archives run this pipeline within a purpose-built Data Enrichment S
 
 * The GATE Developer environment, available from [the GATE download page](https://gate.ac.uk/download). 
 	* The Legislation Amendments GATE pipeline package has been tested with GATE 8.2, GATE 8.6.1 and GATE 9.0.1.
-  * **Note:** GATE 8.5 and onwards use an online plugin repository instead of bundling plugins, and so **the format of .gapp files has changed.** The default version of the application (`legislation-amendments.gapp`) uses the new format. If you are using GATE 8.2–8.4, make sure to use the `legislation-amendments-pre-gate-8.5.gapp` application file instead.
+	* **Note:** GATE 8.5 and onwards use an online plugin repository instead of bundling plugins, and so **the format of .gapp files has changed.** The default version of the application (`legislation-amendments.gapp`) uses the new format. If you are using GATE 8.2–8.4, make sure to use the `legislation-amendments-pre-gate-8.5.gapp` application file instead.
 * A Java JDK, version 8 or later. You can download a free, open licensed JDK from the [OpenJDK website](https://openjdk.java.net/).
 * The Prolog Parser GATE plugin, which you can build from source in the `gate-resources/Prolog_Parser/` folder, or is available pre-built from the [releases page of the GATE pipeline repository on Github](https://github.com/legislation/gate-legislation-amendments/releases).
 * Apache FOP, available from the [Apache FOP downloads page](https://xmlgraphics.apache.org/fop/download.html).
@@ -58,7 +58,7 @@ The National Archives run this pipeline within a purpose-built Data Enrichment S
 
 3. Download and install Apache FOP.
 
-  * You can download the latest version of FOP from the [Apache FOP downloads page](https://xmlgraphics.apache.org/fop/download.html).
+	* You can download the latest version of FOP from the [Apache FOP downloads page](https://xmlgraphics.apache.org/fop/download.html).
 	* Download a “Binary Download” version, which are generally named something like `fop-X.X-bin.zip`.
 	* The ZIP should contain a folder with a name like `fop-X.X`. Extract **the contents of that folder** (but not the `fop-X.X` folder itself) to the `transforms/fop/` subfolder, so that you have a directory structure like this:
 
