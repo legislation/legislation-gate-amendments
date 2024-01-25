@@ -102,8 +102,8 @@ Expressions:
 
 Document model:
 
-- ***docpart* => *docsubpart*** - The operator **=>** has been used to build relations expressing direct containment relations between document components (e.g. section => paragraph2).
-- ***docpart* =>> *docsubpart*** - The transitive closure of **=>** - giving direct *or indirect* containment relations.  
+- ***docpart* ~> *docsubpart*** - The operator **~>** has been used to build relations expressing direct containment relations between document components (e.g. section ~> paragraph2).
+- ***docpart* ~>> *docsubpart*** - The transitive closure of **~>** - giving direct *or indirect* containment relations.  
 
 
 ### Example
@@ -127,7 +127,7 @@ The following is a large proportion of the grammar for provision citations.
    			space,to,space,
  			part:[#ptype = @ptype,list:= collect((@text)+'/rangeEnd',#list)] ]),
 		seq([ part:[ptype:= @ptype,text:= @text],
-			partList:[#ptype => @ptype,list:= map_prepend(@list,#text)] ]),
+			partList:[#ptype ~> @ptype,list:= map_prepend(@list,#text)] ]),
 		part:[ptype:= @ptype,list:= list(@text)]
 	]).
 	
