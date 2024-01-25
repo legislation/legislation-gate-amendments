@@ -57,7 +57,7 @@ The National Archives run this pipeline within a purpose-built Data Enrichment S
 
 3. Download and install Apache FOP.
 
-  * You can download the latest version of FOP from the [Apache FOP downloads page](https://xmlgraphics.apache.org/fop/download.html).
+	* You can download the latest version of FOP from the [Apache FOP downloads page](https://xmlgraphics.apache.org/fop/download.html).
 	* Download a “Binary Download” version, which are generally named something like `fop-X.X-bin.zip`.
 	* The ZIP should contain a folder with a name like `fop-X.X`. Extract **the contents of that folder** (but not the `fop-X.X` folder itself) to the `transforms/fop/` subfolder, so that you have a directory structure like this:
 
