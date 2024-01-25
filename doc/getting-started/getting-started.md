@@ -14,10 +14,9 @@ The National Archives run this pipeline within a purpose-built Data Enrichment S
 
 ### Software dependencies ###
 
-* The GATE Developer environment, available from [the GATE download page](https://gate.ac.uk/download). 
-	* The Legislation Amendments GATE pipeline package has been tested with GATE 8.2, GATE 8.6.1 and GATE 9.0.1.
-  * **Note:** GATE 8.5 and onwards use an online plugin repository instead of bundling plugins, and so **the format of .gapp files has changed.** The default version of the application (`legislation-amendments.gapp`) uses the new format. If you are using GATE 8.2–8.4, make sure to use the `legislation-amendments-pre-gate-8.5.gapp` application file instead.
 * A Java JDK, version 8 or later. You can download a free, open licensed JDK from the [OpenJDK website](https://openjdk.java.net/).
+* The GATE Developer environment, available from [the GATE download page](https://gate.ac.uk/download). 
+	* The Legislation Amendments GATE pipeline package has been tested with GATE 9.0.1. (Earlier GATE versions are unlikely to work with the bundled Prolog Parser plugin.)
 * The Prolog Parser GATE plugin, which you can build from source in the `gate-resources/Prolog_Parser/` folder, or is available pre-built from the [releases page of the GATE pipeline repository on Github](https://github.com/legislation/gate-legislation-amendments/releases).
 * Apache FOP, available from the [Apache FOP downloads page](https://xmlgraphics.apache.org/fop/download.html).
 * Saxon HE, an XSLT execution engine used to run the transforms. You should download [Saxon HE 12.4 from the Saxonica Github page](https://github.com/Saxonica/Saxon-HE/releases/SaxonHE12-4).
@@ -46,7 +45,7 @@ The National Archives run this pipeline within a purpose-built Data Enrichment S
 	```
 	* **Note: If you are using Windows and you extract the package to a network drive or share, GATE may fail to load the application.** We recommend that you extract the package to a folder on a local disk instead.
 	* If you must save the package onto a network drive or share, you can manually edit the configuration file to point towards the correct location:
-		1. Open `LegislationAmendments/legislation-amendments.gapp` (or `LegislationAmendments/legislation-amendments-pre-gate-8.5.gapp` if you are running the pipeline in a GATE version lower than 8.5).
+		1. Open `LegislationAmendments/legislation-amendments.gapp`.
 		2. Find and replace all instances of `$relpath$` with `file://///server/share/path/to/LegislationAmendments/`, where `//server/share/path/to/` is the path to the folder in the network location where you have extracted the package (e.g. if you extracted the package into a folder called `work/gate/` underneath the share `\\filesrv\homedir$`, replace `$relpath$` with `file://///filesrv/homedir$/work/gate/LegislationAmendments/`)
 		3. Save the file.
 	* This problem appears to result from how GATE handles Windows UNC paths and should not occur on macOS or Linux/UNIX systems.
@@ -128,7 +127,7 @@ For further information about GATE, please refer to the [GATE website](https://g
 
 1. Load the pipeline.  
 
-	* Right click on **Applications 🡆 Restore Application from File**.  The GATE application is specified in the file `LegislationAmendments/legislation-amendments.gapp`. (Remember that for versions of GATE older than 8.5, you must instead use the application file  `LegislationAmendments/legislation-amendments-pre-gate-8.5.gapp`)
+	* Right click on **Applications 🡆 Restore Application from File**.  The GATE application is specified in the file `LegislationAmendments/legislation-amendments.gapp`.
 
 		![](pc1_RestoreApplicationFromFile.png)
 

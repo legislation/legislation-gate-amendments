@@ -2,7 +2,7 @@
 <!--  scresswell, 18/10/2018 -->
 
 <CREOLE-DIRECTORY>
-  <JAR SCAN="true">target\Prolog_Parser-1.0-SNAPSHOT.jar</JAR>
+  <JAR SCAN="true">target/Prolog_Parser-1.0-SNAPSHOT.jar</JAR>
   <!--
 	The location of temp files to/from Prolog
 	will be platform-specific default.
