@@ -15,6 +15,7 @@ The National Archives run this pipeline within a purpose-built Data Enrichment S
 ### Software dependencies ###
 
 * A Java JDK, version 8 or later. You can download a free, open licensed JDK from the [OpenJDK website](https://openjdk.java.net/).
+	* **WARNING:** GATE may not run correctly on Java versions above version 11. If you receive an error in the GATE console that says **System.err cannot be resolved to a type**, try installing OpenJDK 11 instead.
 * The GATE Developer environment, available from [the GATE download page](https://gate.ac.uk/download). 
 	* The Legislation Amendments GATE pipeline package has been tested with GATE 9.0.1. (Earlier GATE versions are unlikely to work with the bundled Prolog Parser plugin.)
 * The Prolog Parser GATE plugin, which you can build from source in the `gate-resources/Prolog_Parser/` folder, or is available pre-built from the [releases page of the GATE pipeline repository on Github](https://github.com/legislation/gate-legislation-amendments/releases).
@@ -105,7 +106,7 @@ The National Archives run this pipeline within a purpose-built Data Enrichment S
 	  * We recommend increasing the amount of RAM available to GATE for optimum performance. If you have at least 4GB of RAM, open `gate.l4j.ini` in a text editor and add on a new line the text `-Xmx2G`. (If you have more than 4GB of RAM, increase the `2` to half of the RAM available in your system.) This will allow GATE to use more RAM, which will mean that it will both run faster and run out of memory less often.
 
 6. Download and install SWI-Prolog.
-	* **Note:** The GATE package will look for SWI-Prolog at `C:/Program Files/swipl/bin/swipl.exe` (on Windows) or `/usr/local/bin/swipl` (on macOS/Linux/UNIX). If you have installed SWI-Prolog elsewhere, you will need to change the path in the Prolog Parser component's creole.xml file.
+	* **Note:** The GATE package will look for SWI-Prolog at `C:/Program Files/swipl/bin/swipl.exe` (on Windows) or for an executable called `swipl` in your path (on macOS/Linux/UNIX). If you have installed SWI-Prolog elsewhere, you will need to change the path in the Prolog Parser component's creole.xml file.
 	* To specify a new path to SWI-Prolog, open `LegislationAmendments/gate-resources/Prolog_Parser/creole.xml` with a text editor and add the path to the SWI-Prolog interpreter in the `DEFAULT` attribute of the `swiPrologExecutable` parameter:
 ```xml
 <!-- change "C:/path/to/swipl/bin/swipl.exe" to the SWI-Prolog path on your system -->

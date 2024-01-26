@@ -24,14 +24,14 @@
       NAME="retainTempFiles"
       COMMENT="Retain temporary files for debugging"
       OPTIONAL="true"
-	  DEFAULT="true"
+      DEFAULT="true"
       RUNTIME="true">java.lang.Boolean</PARAMETER>
     <!-- 
 	  If not set, one of the following will be used
         Windows - C:/Program Files/swipl/swipl.exe
         Other -  /usr/bin/swipl	   
 	  To change, add DEFAULT attribute, e.g.:
-      DEFAULT="C:/Program Files/swipl/swopl.exe"
+      DEFAULT="C:/Program Files/swipl/swipl.exe"
     -->
     <PARAMETER 
       NAME="swiPrologExecutable"

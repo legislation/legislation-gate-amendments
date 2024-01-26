@@ -1,7 +1,7 @@
 /*
  *  Parser.java
  *
- * Adapted from code 
+ * Adapted from code
  * Copyright (c) 2000-2012, The University of Sheffield.
  *
  * This file is part of GATE (see http://gate.ac.uk/), and is free
@@ -35,10 +35,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import org.apache.commons.io.FileUtils;
-   
+
 import gate.util.ProcessManager;
 
-   
+
 /**
  * This class is the implementation of the resource PROLOG PARSER.
  */
@@ -58,14 +58,14 @@ public class Parser extends AbstractLanguageAnalyser
 	private Boolean overrideRetainTempFiles;
 	private Boolean retainTempFiles;
 
-    public Resource init() throws ResourceInstantiationException {  
+    public Resource init() throws ResourceInstantiationException {
 		// Defaults for executable location
 		if(overrideSwiPrologExecutable==null) {
 			if(System.getProperty("os.name").toLowerCase().startsWith("windows")) {
 				swiPrologExecutable= "C:/Program Files/swipl/bin/swipl.exe";
 			}
 			else {
-				swiPrologExecutable= "/usr/local/bin/swipl";
+				swiPrologExecutable= "swipl";
 			}
 		} else {
 			swiPrologExecutable= overrideSwiPrologExecutable;
@@ -74,7 +74,7 @@ public class Parser extends AbstractLanguageAnalyser
 		// Default for retaining temp files (don't)
 		if(overrideRetainTempFiles==null)
 			retainTempFiles= false;
-		else 
+		else
 			retainTempFiles= overrideRetainTempFiles;
 
 		// Default for temp dir
@@ -84,7 +84,7 @@ public class Parser extends AbstractLanguageAnalyser
 			tempDir= overrideTempDir;
 		}
 		if(changesFlag==null) changesFlag= false;
-		return this;  
+		return this;
     }
 
     public void execute() throws ExecutionException {
@@ -146,11 +146,11 @@ public class Parser extends AbstractLanguageAnalyser
 
     public void callProlog(
 		File parserFile,
-		File in, 
-		File out, 
+		File in,
+		File out,
 		File changesOut)
 		throws ExecutionException {
-		   
+		
 		// External command and its args
 		String argv[]= {
 			swiPrologExecutable,
@@ -185,7 +185,7 @@ public class Parser extends AbstractLanguageAnalyser
     public String getInputASName() {
         return inputASName;
     }
-    
+
     @Optional
     @RunTime
     @CreoleParameter(comment = "Name of the output annotationSet used")
@@ -195,7 +195,7 @@ public class Parser extends AbstractLanguageAnalyser
     public String getOutputASName() {
         return outputASName;
     }
-    
+
     @RunTime
     @CreoleParameter(comment = "Prolog file to run")
     public void setPrologProgram(URL file) {
@@ -218,7 +218,7 @@ public class Parser extends AbstractLanguageAnalyser
 	// so that the default values can be overridden there.
 	// We have hidden defaults because we don't want
 	// them to get saved when the pipeline is saved
-	// The TempDir are SwiPrologExecutable have 
+	// The TempDir are SwiPrologExecutable have
 	// OS-dependent defaults.
     public void setTempDir(String dir) {
         this.overrideTempDir = dir;
