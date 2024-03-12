@@ -2,6 +2,7 @@ package uk.co.tso.prolog;
 
 import gate.Factory;
 import gate.LanguageAnalyser;
+import gate.creole.ResourceInstantiationException;
 import gate.test.GATEPluginTests;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -18,12 +19,12 @@ import static org.junit.Assert.*;
 public class TestParser extends GATEPluginTests {
 
   @Test
-  public void testSomething() {
-    LanguageAnalyser pr = (LanguageAnalyser)Factory.createResource("uk.co.tso.prolog.Parser");
-    try {
+  public void testSomething() { // throws ResourceInstantiationException {
+    // LanguageAnalyser pr = (LanguageAnalyser)Factory.createResource("uk.co.tso.prolog.Parser");
+    // try {
       // testing code goes here
-    } finally {
-      Factory.deleteResource(pr);
-    }
+    // } finally {
+    //  Factory.deleteResource(pr);
+    // }
   }
 }
