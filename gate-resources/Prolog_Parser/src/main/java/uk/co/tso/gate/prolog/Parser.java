@@ -9,7 +9,7 @@
  * Version 3, 29 June 2007.
  *
  * A copy of this licence is included in the distribution in the file
- * licence.html, and is also available at http://gate.ac.uk/gate/licence.html.
+ * LICENCE.txt, and is also available at http://gate.ac.uk/gate/licence.html.
  *
  *  scresswell, 18/10/2018
  *
